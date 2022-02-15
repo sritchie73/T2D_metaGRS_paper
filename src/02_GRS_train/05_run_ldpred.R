@@ -220,12 +220,13 @@ for (gwas in gwass) {
 	###################################################################
 	# Load phenotype data and setup T2D prediction model comparisons
 	###################################################################
-	pheno <- fread("data/ldpred2/training_sample_phenotypes.txt")
+	pheno <- fread("data/ukb/collated_curated_data.txt")
+	pheno <- pheno[(ldpred2_samples) & visit_index == 0]
 
 	# Ensure samples are ordered the same as genotype data
 	fam <- snp_attach(sprintf("%s/filtered_ukb_chr22.rds", ramdir))$fam
 	setDT(fam)
-	pheno <- pheno[fam[,.(sample.ID)], on = .(eid_7439=sample.ID)]
+	pheno <- pheno[fam[,.(sample.ID)], on = .(eid=sample.ID)]
 
 	# Fit null model (no PRS) in the training data
 	null_model <- glm.test(
@@ -550,7 +551,7 @@ for (gwas in gwass) {
 
 	# Predicted PGS levels (for sanity checking)
   # Models that failed to be fit (or where betas were all 0) are removed
-	pgs_levels <- pheno[,.(eid_7439)]
+	pgs_levels <- pheno[,.(eid)]
 
   if ("pgs_inf" %in% names(pheno)) {
     pgs_levels <- cbind(pgs_levels, pheno[,.(pgs_inf)])
