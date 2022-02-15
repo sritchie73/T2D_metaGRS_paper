@@ -3,3 +3,4 @@ data/
 slurm-*
 tmp/
 .*.swp
+output/
