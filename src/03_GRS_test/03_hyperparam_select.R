@@ -1,5 +1,6 @@
 library(data.table)
 library(foreach)
+library(ggplot2)
 
 # Set up parallelisation (e.g. for fread/fwrite)
 source("src/functions/par_setup.R")
