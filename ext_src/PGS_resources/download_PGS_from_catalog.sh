@@ -41,10 +41,12 @@ pgs_name="${name}_${pgsid}_${uuid}"
 # Determine output directory if not provided
 if [ $out == "NULL" ]; then
   out_dir=$src_dir/$pgs_name
+else
+  out_dir=$out
 fi
 
 # Save the score
 mkdir -p $out_dir
-mv $out_dir/$pgsid.txt.gz $out_dir/$pgs_name.txt.gz
+mv $tmp_dir/$pgsid.txt.gz $out_dir/$pgs_name.txt.gz
 chmod -w $out_dir/$pgs_name.txt.gz
 
