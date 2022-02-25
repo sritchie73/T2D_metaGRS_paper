@@ -22,5 +22,3 @@ done
 	--time 8:0:0 \
 	--single-out collated_scores
 
-# Copy paths to scores to output directory
-cp tmp/$uuid/paths_to_scores.txt data/INTERVAL/T2D_PGS/
