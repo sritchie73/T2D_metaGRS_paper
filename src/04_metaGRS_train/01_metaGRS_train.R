@@ -8,7 +8,7 @@ source("src/functions/factor_by_size.R")
 source("src/functions/define_case_control_status.R")
 
 # Load training data
-pheno <- fread("data/ukb/collated_curated_data.txt")
+pheno <- fread("data/UKB/collated_curated_data.txt")
 pheno <- pheno[(metaGRS_train_samples)]
 
 # Load list of best models

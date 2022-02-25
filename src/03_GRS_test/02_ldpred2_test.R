@@ -62,7 +62,7 @@ for (gwas in gwass) {
 }
 
 # Load dataset for testing ldpred2 GRSs
-pheno <- fread("data/ukb/collated_curated_data.txt")
+pheno <- fread("data/UKB/collated_curated_data.txt")
 pheno <- pheno[(metaGRS_train_samples)]
 
 # Test each model
