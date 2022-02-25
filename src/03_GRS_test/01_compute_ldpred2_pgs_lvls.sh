@@ -13,7 +13,7 @@ for gwas_dir in output/ldpred2/train/*; do
 	./src/PGS_resources/calc_PS_lvls.sh \
     --score-file output/ldpred2/train/$gwas/ldpred2_pgs_varweights.txt.gz \
     --type 's' --score-weight 'm' \
-		--genotype-prefix 'data/ukb/genetics/imputed_pgen/ukb_imp_v3_dedup_chr' \
+		--genotype-prefix 'data/UKB/genetics/imputed_pgen/ukb_imp_v3_dedup_chr' \
 		--keep-ambiguous \
 		--work output/ldpred2/all_hyperparam_grs_lvls/$gwas \
 		--out output/ldpred2/all_hyperparam_grs_lvls/$gwas \

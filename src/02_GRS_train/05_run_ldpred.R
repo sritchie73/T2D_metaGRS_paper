@@ -220,7 +220,7 @@ for (gwas in gwass) {
 	###################################################################
 	# Load phenotype data and setup T2D prediction model comparisons
 	###################################################################
-	pheno <- fread("data/ukb/collated_curated_data.txt")
+	pheno <- fread("data/UKB/collated_curated_data.txt")
 	pheno <- pheno[(ldpred2_samples) & visit_index == 0]
 
 	# Ensure samples are ordered the same as genotype data

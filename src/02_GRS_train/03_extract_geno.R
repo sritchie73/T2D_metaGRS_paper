@@ -9,7 +9,7 @@ source("src/functions/par_setup.R")
 system("mkdir -p data/ldpred2", wait=TRUE)
 
 # Get list of training samples to keep
-pheno <- fread("data/ukb/collated_curated_data.txt")
+pheno <- fread("data/UKB/collated_curated_data.txt")
 train <- pheno[(ldpred2_samples)]
 fwrite(train[visit_index == 0,.(eid, eid)], col.names=FALSE, quote=FALSE, sep=" ", file="data/ldpred2/training_samples.txt")
 
@@ -26,9 +26,9 @@ fwrite(varset[,.(snp_id)], col.names=FALSE, quote=FALSE, file="data/ldpred2/filt
 
 # Now do the same for UKB, creating new bim files with recoded IDs and symlinking to the bed/fam files
 for (this_chr in 1:22) { 
-  system(sprintf("ln -s $(realpath data/ukb/genetics/imputed_bed/ukb_imp_v3_dedup_chr%s.bed) data/ldpred2/full_ukb_chr%s.bed", this_chr, this_chr), wait=TRUE)
-  system(sprintf("ln -s $(realpath data/ukb/genetics/imputed_bed/ukb_imp_v3_dedup_chr%s.fam) data/ldpred2/full_ukb_chr%s.fam", this_chr, this_chr), wait=TRUE)
-  bim <- fread(sprintf("data/ukb/genetics/imputed_bed/ukb_imp_v3_dedup_chr%s.bim", this_chr))
+  system(sprintf("ln -s $(realpath data/UKB/genetics/imputed_bed/ukb_imp_v3_dedup_chr%s.bed) data/ldpred2/full_ukb_chr%s.bed", this_chr, this_chr), wait=TRUE)
+  system(sprintf("ln -s $(realpath data/UKB/genetics/imputed_bed/ukb_imp_v3_dedup_chr%s.fam) data/ldpred2/full_ukb_chr%s.fam", this_chr, this_chr), wait=TRUE)
+  bim <- fread(sprintf("data/UKB/genetics/imputed_bed/ukb_imp_v3_dedup_chr%s.bim", this_chr))
   setnames(bim, c("chr", "rsid", "cm", "pos", "A1", "A2"))
   bim[, rn := .I]
   bim[varset, on = .(chr, pos=pos_b37), rsid := sprintf("%s:%s:%s", chr, pos, paste(sort(c(A1, A2)), collapse=":")), by=.(rn)]

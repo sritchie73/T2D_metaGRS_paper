@@ -96,14 +96,14 @@ vars_1kg[, SAS_AF := as.numeric(gsub("SAS_AF=", "", SAS_AF))]
 
 # Filter to variants present in UKB data (N=96 in 1KG not present in UKB by chr and pos)
 ukb_vars <- foreach(this_chr = 1:22, .combine=rbind) %do% {
-  fread(sprintf("data/ukb/genetics/imputed_bed/ukb_imp_v3_dedup_chr%s.bim", this_chr), header=FALSE)
+  fread(sprintf("data/UKB/genetics/imputed_bed/ukb_imp_v3_dedup_chr%s.bim", this_chr), header=FALSE)
 }
 setnames(ukb_vars, c("chr", "rsid", "cM", "pos", "A1", "A2"))
 vars_1kg <- vars_1kg[unique(ukb_vars[,.(chr, pos)]), on = .(`#CHROM`=chr, POS=pos), nomatch=0]
 
 # Get info on allele frequency in UKB
 for (this_chr in 1:22) {
-  ukb_maf <- fread(sprintf("data/ukb/genetics/reference_files/ukb_impv3_chr%s_snpstats.txt", this_chr), skip="alternate_ids")
+  ukb_maf <- fread(sprintf("data/UKB/genetics/reference_files/ukb_impv3_chr%s_snpstats.txt", this_chr), skip="alternate_ids")
   ukb_vars[ukb_maf, on = .(chr=chromosome, pos=position, A1=minor_allele, A2=major_allele),
            c("A1freq", "INFO") := .(minor_allele_frequency, impute_info)]
   ukb_vars[ukb_maf, on = .(chr=chromosome, pos=position, A2=minor_allele, A1=major_allele),
@@ -249,7 +249,7 @@ varset[!is.na(liftOver_pos), pos_b36 := ifelse(chr == b36$chr, b36$pos_b36, NA)]
 varset[, liftOver_pos := NULL]
 
 # Load in UK Biobank SNP QC information
-ukb_snp_qc <- fread("data/ukb/genetics/reference_files/ukb_snp_qc.txt")
+ukb_snp_qc <- fread("data/UKB/genetics/reference_files/ukb_snp_qc.txt")
 
 varset[, UKB_directly_genotyped := FALSE]
 varset[ukb_snp_qc, on = .(chr=chromosome, pos_b37=position), UKB_directly_genotyped := TRUE]

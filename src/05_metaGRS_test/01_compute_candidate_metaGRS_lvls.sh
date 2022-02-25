@@ -12,7 +12,7 @@ for sfile in output/metaGRS/train/*.txt.gz; do
 	./src/PGS_resources/calc_PS_lvls.sh \
     --score-file $sfile \
     --type 's' --score-weight 'm' \
-		--genotype-prefix 'data/ukb/genetics/imputed_pgen/ukb_imp_v3_dedup_chr' \
+		--genotype-prefix 'data/UKB/genetics/imputed_pgen/ukb_imp_v3_dedup_chr' \
 		--keep-ambiguous \
 		--work $out_dir \
 		--out $out_dir \
