@@ -13,6 +13,8 @@ Usage:
 Options:
   -h --help                   Show this screen.
   --pgsid <PGS_ID>            Identifier in the PGS Catalog.
+  --out <directory>           Optional alternate directory to save PGS to instead of under
+                              GRS_resources. [default: NULL]
   --name <name>               Optional additional name to give the PGS folder and score file.
                               If not provided, the reported trait in the PGS score file header 
                               will be used. [default: NULL]
@@ -36,8 +38,13 @@ uuid=$(uuidgen | sed 's/-.*//')
 # Build the name of the score
 pgs_name="${name}_${pgsid}_${uuid}"
 
+# Determine output directory if not provided
+if [ $out == "NULL" ]; then
+  out_dir=$src_dir/$pgs_name
+fi
+
 # Save the score
-mkdir -p $src_dir/$pgs_name
-mv $tmp_dir/$pgsid.txt.gz $pgs_name/$pgs_name.txt.gz
-chmod -w $src_dir/$pgs_name/$pgs_name.txt.gz
+mkdir -p $out_dir
+mv $out_dir/$pgsid.txt.gz $out_dir/$pgs_name.txt.gz
+chmod -w $out_dir/$pgs_name.txt.gz
 

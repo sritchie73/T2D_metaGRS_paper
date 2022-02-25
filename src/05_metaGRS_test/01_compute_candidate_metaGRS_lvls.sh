@@ -1,22 +1,21 @@
 #!/bin/bash
 
 # Make output directory:
-mkdir -p output/ldpred2/all_hyperparam_grs_lvls
+mkdir -p output/metaGRS/all_candidate_metaGRS_lvls
 
-# Loop through GWAS and compute PGS for all LDpred2 hyperparameters
-for gwas_dir in output/ldpred2/train/*; do
-  gwas=$(basename $gwas_dir)
-
-  rm -rf output/ldpred2/all_hyperparam_grs_lvls/$gwas
+for sfile in output/metaGRS/train/*.txt.gz; do
+  out_dir=$(echo $(basename $sfile) | sed 's/.txt.gz//')
+  out_dir=output/metaGRS/all_candidate_metaGRS_lvls/$out_dir
+  rm -rf $out_dir
 
   # Use existing pipeline to compute scores
 	./src/PGS_resources/calc_PS_lvls.sh \
-    --score-file output/ldpred2/train/$gwas/ldpred2_pgs_varweights.txt.gz \
+    --score-file $sfile \
     --type 's' --score-weight 'm' \
 		--genotype-prefix 'data/ukb/genetics/imputed_pgen/ukb_imp_v3_dedup_chr' \
 		--keep-ambiguous \
-		--work output/ldpred2/all_hyperparam_grs_lvls/$gwas \
-		--out output/ldpred2/all_hyperparam_grs_lvls/$gwas \
+		--work $out_dir \
+		--out $out_dir \
     --time 8:0:0 \
     --single-out collated_scores
 
