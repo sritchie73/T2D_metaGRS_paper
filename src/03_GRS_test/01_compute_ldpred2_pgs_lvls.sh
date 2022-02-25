@@ -4,10 +4,9 @@
 mkdir -p output/ldpred2/all_hyperparam_grs_lvls
 
 # Loop through GWAS and compute PGS for all LDpred2 hyperparameters
-## for gwas_dir in output/ldpred2/train/*; do
-##  gwas=$(basename $gwas_dir)
+for gwas_dir in output/ldpred2/train/*; do
+  gwas=$(basename $gwas_dir)
 
-for gwas in DBP; do
   rm -rf output/ldpred2/all_hyperparam_grs_lvls/$gwas
 
   # Use existing pipeline to compute scores
