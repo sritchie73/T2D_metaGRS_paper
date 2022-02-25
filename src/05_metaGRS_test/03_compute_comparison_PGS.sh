@@ -20,6 +20,3 @@ done
 	--work data/UKB/T2D_PGS/ \
 	--time 8:0:0 \
 	--single-out collated_scores
-
-# Copy paths to scores to output directory
-cp tmp/$uuid/paths_to_scores.txt data/UKB/T2D_PGS/
