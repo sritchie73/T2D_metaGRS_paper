@@ -18,6 +18,11 @@ Options:
   --name <name>               Optional additional name to give the PGS folder and score file.
                               If not provided, the reported trait in the PGS score file header 
                               will be used. [default: NULL]
+  --nouuid                    If provided, the default 8-character unique identifier is not 
+                              generated and appended to the score file name
+  --overwrite                 If provided, deletes the target output directory (i.e. replacing
+                              its contents). Ignored if no target output directory is specified
+                              by the user.
 EOF
 )"
 
@@ -32,17 +37,23 @@ if [ $name == "NULL" ]; then
   name=$(echo $trait | sed "s/'//g" | sed 's/\b\(.\)/\u\1/g' | sed 's/[^[:alnum:]]//g') # convert first letter of each word to uppercase, then strip out non-alphanumeric characters
 fi
 
-# Set unique identifier for the PGS
-uuid=$(uuidgen | sed 's/-.*//')
-
-# Build the name of the score
-pgs_name="${name}_${pgsid}_${uuid}"
+# Set name and unique identifier for the PGS
+if $nouuid; then
+  pgs_name="${name}_${pgsid}"
+else 
+  uuid=$(uuidgen | sed 's/-.*//') # just keep first 8 characters
+  pgs_name="${name}_${pgsid}_${uuid}"
+fi
 
 # Determine output directory if not provided
 if [ $out == "NULL" ]; then
   out_dir=$src_dir/$pgs_name
 else
   out_dir=$out
+	# Clear output directory if --overwrite set
+	if $overwrite; then
+		rm -rf $out_dir
+	fi
 fi
 
 # Save the score
