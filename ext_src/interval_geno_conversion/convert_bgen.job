@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# Make sure job is submitted directly
+if [ ! -z ${SLURM_JOB_ID+x} ]; then
+   echo "This script should be executed directly, not with sbatch."
+   exit 1
+fi
+
+# Force user to specify account
+if [ -z "$1" ]; then
+   echo "First argument to this script must be the slurm account you want to use (see mybalance)"
+   exit 1
+else
+   account=$1
+fi
+
+# allows user to specify a job to wait for completion before running any of these scripts
+if [ ! -z "$2" ]; then
+  previous_job=$2
+else
+  previous_job=1 # run first job immediately
+fi
+
+# Set target destination
+target=/rds/project/jmmh2/rds-jmmh2-post_qc_data/interval/imputed/uk10k_1000g_b37/imputed/plink_format/pgen
+
+# Create logging directory
+log_dir=$target/slurm_logs/
+mkdir -p $log_dir
+
+# Step 1: convert the BGEN files to plink pgen/pvar/pfam files.
+# These maintain the probabilistic dosage information, while also
+# separating the variant information into a separate file.
+conv_job=$(sbatch --dependency afterok:$previous_job \
+                  --parsable \
+                  --account $account \
+                  --job-name "Convert bgen" \
+                  --time 12:0:0 \
+                  --array 1-22 \
+                  --mem 36000 \
+                  --output $log_dir/convert_bgen_%A_%a.o \
+                  --error $log_dir/convert_bgen_%A_%a.e \
+                  --partition skylake,skylake-himem \
+                  $target/01_convert_bgen.sh)
+
+# Step 2: Give variants unique identifiers and flag duplicates 
+# for removal
+flag_job=$(sbatch --dependency afterok:$conv_job \
+                  --parsable \
+                  --account $account \
+                  --job-name "Flag duplicates" \
+                  --array 1-22 \
+                  --time 1:0:0 \
+                  --mem 12000 \
+                  --output $log_dir/flag_duplicates_%A_%a.o \
+                  --error $log_dir/flag_duplicates_%A_%a.e \
+                  --partition skylake \
+                  --wrap "Rscript $target/02_flag_duplicates.R")
+
+# Step 3: Remove the variants flagged for removal
+rmdp_job=$(sbatch --dependency afterok:$flag_job \
+                  --parsable \
+                  --account $account \
+                  --job-name "Remove duplicates" \
+                  --time 12:0:0 \
+                  --array 1-22 \
+                  --mem 6000 \
+                  --output $log_dir/remove_duplicates_%A_%a.o \
+                  --error $log_dir/remove_duplicates_%A_%a.e \
+                  --partition skylake \
+                  $target/03_filter_duplicates.sh)
+
+# Step 4: Remove the extra crud in the variant identifiers now that
+# the deduplication process has happened.
+fvid_job=$(sbatch --dependency afterok:$rmdp_job \
+                  --parsable \
+                  --account $account \
+                  --job-name "Fix variant IDs" \
+                  --time 1:0:0 \
+                  --array 1-22 \
+                  --mem 6000 \
+                  --output $log_dir/fix_var_ids_%A_%a.o \
+                  --error $log_dir/fix_var_ids_%A_%a.e \
+                  --partition skylake \
+                  --wrap "Rscript $target/04_fix_var_ids.R")
+
+echo "Submitted jobs $conv_job, $flag_job, $rmdp_job, $fvid_job"
+
