@@ -1,4 +1,4 @@
-# Suggested SLURM commands to run for each of the scripts in src/03_metaGRS_train/,
+# Suggested SLURM commands to run for each of the scripts in src/04_metaGRS_train/,
 # documenting expected resource usage and requirements
 
 echo "This should not be run as a script"
