@@ -44,10 +44,12 @@ Folders tracked here:
  - smoking/: scripts and information used to extract and curate smoking status and related variables from UK Biobank
    touchscreen survey data. Used by the 'QDiabetes/' folder above.
 
- - ukb_geno_conversion/: scripts used to convert UKB imputed genotype data (BGEN format) to plink pgen and bed formats, 
-   with basic QC filtering of duplicate variants (by pos and alleles), and linkage to specific project sample 
-   identifiers.
+ - ukb_geno_conversion/: scripts used to convert UKB imputed genotype data (BGEN format) to plink pgen format, with 
+   basic QC filtering of duplicate variants (by pos and alleles), and linkage to specific project sample identifiers.
 
  - PGS_resources/: tool for downloading PGS from the PGS catalog and general purpose pipeline I've developed for 
    computing polygenic score levels from genotype data and one or more files of varaint weights. The scripts have 
    several hard coded aspects (to make them runnable by others in the location on the cluster they live in).
+
+ - interval_geno_conversion/: scripts used to convert INTERVAL imputed genotype data (BGEN format) to plink pgen format,
+   with basic QC filtering of duplicate variants (by pos and alleles).
