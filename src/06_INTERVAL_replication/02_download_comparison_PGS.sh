@@ -5,6 +5,9 @@
 mkdir -p data/T2D_PGS/UKB_invalid
 
 ./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
+  --pgsid PGS000864 --name Aly2021 --out data/T2D_PGS/UKB_valid/Aly2021
+
+./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
   --pgsid PGS000330 --name Mars2020 --out data/T2D_PGS/UKB_invalid/Mars2020
 
 ./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
