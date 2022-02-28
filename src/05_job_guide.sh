@@ -15,3 +15,7 @@ exit 1
 # Compute those external T2D PGS in UKB
 ./src/05_metaGRS_test/03_compute_comparison_PGS.sh
 
+# Evaluate all possible T2D PGS with all possible case/control definitions
+sbatch --array=1-25 --mem 50000 --time 4:0:0  \
+  --wrap "Rscript src/05_metaGRS_test/04_metaGRS_test.R"
+

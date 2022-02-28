@@ -1,10 +1,6 @@
 library(data.table)
 library(survival)
 library(foreach)
-library(ggplot2)
-library(ggthemes)
-library(cowplot)
-library(bigsnpr)
 source("src/functions/glm_test.R")
 source("src/functions/cox_test.R")
 source("src/functions/factor_by_size.R")
@@ -94,7 +90,7 @@ for (mIdx in case_control_definitions[,.I]) {
 			factor_by_size(earliest_hospital_nation) + # differences in length of retrospective follow-up by nation
 			factor_by_size(assessment_centre) # potentially confounded by differences in average date of baseline assessment
 		suppressMessages(g1 <- glm.test(formula=mf, event_col="T2D", data=dat, ci.method="wald"))
-		null_model <- data.table(model_type=this_model$type, case_def=gsub("(prevalent_)|(incident_)", "", this_model$short_name), pgs="none",
+		null_model <- data.table(model_type=this_model$type, model_case_def=gsub("(prevalent_)|(incident_)", "", this_model$short_name), pgs="none",
       model_fit_metric="AUC", model_fit_estimate=g1$AUC[1], model_fit_L95=g1$AUC.L95[1], model_fit_U95=g1$AUC.U95[1], model_fit_pval=NA)
 	} else if (this_model$type == "incident") {
 		mf <- Surv(incident_censor_years, T2D) ~ strata(genetic_sex) + age +
@@ -102,7 +98,7 @@ for (mIdx in case_control_definitions[,.I]) {
 			factor_by_size(censor_hospital_nation) + # differences in follow-up, particularly due to shorter time in Wales
 			factor_by_size(assessment_centre) # Differences in average date of baseline assessment by nation potentially confound both
 		c1 <- cox.test(formula=mf, event_col="T2D", data=dat)
-		null_model <- data.table(model_type=this_model$type, case_def=gsub("(prevalent_)|(incident_)", "", this_model$short_name), pgs="none",
+		null_model <- data.table(model_type=this_model$type, model_case_def=gsub("(prevalent_)|(incident_)", "", this_model$short_name), pgs="none",
       model_fit_metric="C.index", model_fit_estimate=c1$C.index[1], model_fit_L95=c1$C.L95[1], model_fit_U95=c1$C.U95[1], model_fit_pval=NA)
 	}
 
@@ -111,9 +107,8 @@ for (mIdx in case_control_definitions[,.I]) {
   cat("Evaluating candidate metaGRS...\n")
 	pgs_model <- foreach(pIdx = unique(pgs$idx), .combine=rbind) %do% {
     this_pgs <- pgs[idx == pIdx]
-    #this_pgs_info <- unique(this_pgs[,.(pgs=name, lambda, alpha, type, prefilter, case_def)])
-    this_pgs_info <- unique(this_pgs[,.(pgs=name)])
-    this_model_info <- null_model[, .(model_type, case_def)]
+    this_pgs_info <- unique(this_pgs[,.(pgs=name, lambda, alpha, type, prefilter, pgs_case_def=case_def)])
+    this_model_info <- null_model[, .(model_type, model_case_def)]
 
 	  # Add PGS to dat
 		dat[this_pgs, on = .(eid), PGS := i.level]
