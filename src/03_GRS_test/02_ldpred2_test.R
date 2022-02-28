@@ -65,6 +65,14 @@ for (gwas in gwass) {
 pheno <- fread("data/UKB/collated_curated_data.txt")
 pheno <- pheno[(metaGRS_train_samples)]
 
+# curate set of case control definitions and models to test
+#
+# Here we drop QDiabetes models - these use the same definition as 
+# short_name == "incident_basic_adjudicated" but additionally drop samples with
+# missing data in the given QDiabetes column - i.e. used later only for testing
+# metaGRS
+case_control_definitions <- case_control_definitions[!(short_name %like% "QDiabetes")]
+
 # Test each model
 for (gwas in gwass) {
   cat(gwas, "\n")
@@ -169,7 +177,7 @@ for (gwas in gwass) {
         PC7 + PC8 + PC9 + PC10 + PC11 + PC12 + PC13 + PC14 + PC15 + PC16 + 
         PC17 + PC18 + PC19 + PC20)$residuals)]
 
-		  # Test, with and without genotype chip as covariate
+		  # Test
 			if (this_model$type == "prevalent") {
 				mf <- T2D ~ genetic_sex + PGS + age + 
 					factor_by_size(earliest_hospital_nation) + # differences in length of retrospective follow-up by nation
