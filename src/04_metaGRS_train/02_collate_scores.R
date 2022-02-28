@@ -2,6 +2,14 @@ library(data.table)
 library(foreach)
 source("src/functions/define_case_control_status.R")
 
+# curate set of case control definitions and models used for metaGRS training 
+#
+# Here we drop QDiabetes models - these use the same definition as
+# short_name == "incident_basic_adjudicated" but additionally drop samples with
+# missing data in the given QDiabetes column - i.e. used later only for testing
+# metaGRS
+case_control_definitions <- case_control_definitions[!(short_name %like% "QDiabetes")]
+
 # Collate all candidate metaGRS into three files: 
 #
 #  (1) for metaGRS trained on prevalent T2D

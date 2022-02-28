@@ -15,6 +15,14 @@ pheno <- pheno[(metaGRS_train_samples)]
 best_grss <- fread("output/ldpred2/hyperparam_selection/best_models.txt")
 best_grss <- best_grss[metric %in% c("AUC", "C.index")]
 
+# curate set of case control definitions and models to use for training
+#
+# Here we drop QDiabetes models - these use the same definition as
+# short_name == "incident_basic_adjudicated" but additionally drop samples with
+# missing data in the given QDiabetes column - i.e. used later only for testing
+# metaGRS
+case_control_definitions <- case_control_definitions[!(short_name %like% "QDiabetes")]
+
 # Build metaGRS for each case-control definition and model type, with different pre-filtering methods
 # on input gwases
 iter <- 0
