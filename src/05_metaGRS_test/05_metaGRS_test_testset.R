@@ -7,10 +7,10 @@ source("src/functions/factor_by_size.R")
 source("src/functions/define_case_control_status.R")
 
 # Create output directory
-system("mkdir -p output/metaGRS/test", wait=TRUE)
+system("mkdir -p output/metaGRS/test/testset", wait=TRUE)
 
 # Load dataset for testing metaGRSs
-pheno <- fread("data/UKB/collated_curated_data.txt")
+pheno <- fread("data/UKB/collated_curated_data.txt", tmpdir="tmp")
 pheno <- pheno[(metaGRS_test_samples)]
 
 # curate set of case control definitions and models to test
@@ -30,11 +30,11 @@ cc <- foreach(mIdx = case_control_definitions[,.I], .combine=rbind) %do% {
 	this_model[, N_missing := pheno[,.N] - dat[,.N]]
 	this_model
 }
-fwrite(cc, sep="\t", quote=FALSE, file="output/metaGRS/test/cohort_case_numbers.txt")
+fwrite(cc, sep="\t", quote=FALSE, file="output/metaGRS/test/testset/cohort_case_numbers.txt")
 
 # Load all candidate metaGRS and previous T2D PGS for comparison
 load_pgs <- function(fname, candidate_metaGRS=TRUE) {
-  wide <- fread(fname)
+  wide <- fread(fname, tmpdir="tmp")
   setnames(wide, "IID", "eid")
   wide <- wide[eid %in% pheno$eid]
 
@@ -145,5 +145,5 @@ for (mIdx in case_control_definitions[,.I]) {
 
   # Combine and write out
   perf <- rbind(null_model, pgs_model, fill=TRUE)
-  fwrite(perf, sep="\t", quote=FALSE, file=sprintf("output/metaGRS/test/%s_model_performance.txt", this_model$short_name))
+  fwrite(perf, sep="\t", quote=FALSE, file=sprintf("output/metaGRS/test/testset/%s_model_performance.txt", this_model$short_name))
 }
