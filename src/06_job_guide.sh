@@ -6,6 +6,8 @@ exit 1
 
 # First set of scripts either dispatch to slurm themselves, or run with trivial resources
 
+# Compute metaGRS
+./src/06_INTERVAL_replication/01_compute_metaGRS.sh
 
 # Download from PGS Catalog all T2D PGS that can be tested in INTERVAL (that haven't already
 # been downloaded previously for calculation in UKB)
