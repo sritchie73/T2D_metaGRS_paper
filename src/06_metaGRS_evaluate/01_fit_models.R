@@ -37,10 +37,6 @@ for (this_pgs in names(pgs)[-1]) {
 # sign.
 pheno[, Ye2021_PGS001357 := -Ye2021_PGS001357]
 
-# Drop participants free of T2D at baseline who have withdrawn consent for hospital record
-# linkage
-pheno <- pheno[(type_2_diabetes) | !is.na(earliest_hospital_nation)]
-
 # Process risk factors and covariates prior to modelling - we want all
 # estimates to be per SD change in variable, and for factors, using the
 # largest group or lowest risk as reference 
@@ -69,8 +65,12 @@ pheno[, QDiabetes2018B_non_fasting := scale(logit(QDiabetes2018B_non_fasting/100
 pheno[, QDiabetes2018C := scale(logit(QDiabetes2018C/100))]
 pheno[, assessment_centre := factor_by_size(assessment_centre)]
 pheno[, censor_hospital_nation := factor_by_size(censor_hospital_nation)]
-pheno[is.na(earliest_hospital_nation), earliest_hospital_nation := assessment_nation] # N=5 Prevalent T2D cases from self-report who've withdrawn consent for hospital record linkage
+pheno[is.na(earliest_hospital_nation) & !(type_2_diabetes), earliest_hospital_nation := assessment_nation] # N=5 Prevalent T2D cases from self-report who've withdrawn consent for hospital record linkage
 pheno[, earliest_hospital_nation := factor_by_size(earliest_hospital_nation)]
+
+# Drop participants free of T2D at baseline who have withdrawn consent for hospital record
+# linkage and people with uncertain diabetes status
+pheno <- pheno[!is.na(type_2_diabetes) & !is.na(earliest_hospital_nation)]
 
 # First examine prevalent T2D
 prev <- rbind(idcol="model",
@@ -137,6 +137,12 @@ qd_inci <- foreach(this_rs = qdiab, .combine=rbind) %do% {
   res[, model := this_rs]
 }
 
+qd_inci2 <- rbind(idcol = "model",
+  "QDiabetes2018B_fast_gte_3"=cox.test(sprintf(mf, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 3]),
+  "QDiabetes2018B_fast_gte_8"=cox.test(sprintf("%s ~ %s + age + sex", y, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 8])
+)
+qd_inci <- rbind(qd_inci, qd_inci2)
+
 pgs_inci <- foreach(this_pgs = names(pgs)[-1], .combine=rbind) %do% {
   res <- cox.test(sprintf(mf, this_pgs), "incident_type_2_diabetes", pheno)
   res[, model := this_pgs]
@@ -175,6 +181,8 @@ inci[coefficient == "hypertension_medicationTRUE", coefficient := "Taking hypert
 inci[coefficient == "lipid_lowering_medicationTRUE", coefficient := "Taking lipid lowering medication"]
 inci[coefficient == "systematic_corticosteroidsTRUE", coefficient := "Taking systematic corticosteroids"]
 inci[coefficient == "atypical_antipsychoticsTRUE", coefficient := "Taking 2nd generation atypical antipsychotics"]
+inci[model == "QDiabetes2018B_fast_gte_3" & coefficient %like% "QDiabetes", coefficient := "QDiabetes 2018 model B (fasting ≥ 3hours)"]
+inci[model == "QDiabetes2018B_fast_gte_8" & coefficient %like% "QDiabetes", coefficient := "QDiabetes 2018 model B (fasting ≥ 8hours)"]
 
 # Write out
 fwrite(inci, sep="\t", quote=FALSE, file="output/UKB_tests/incident_T2D_associations.txt")
@@ -204,6 +212,12 @@ qd_inci <- foreach(this_rs = qdiab, .combine=rbind) %do% {
   res <- cox.test(sprintf(mf, this_rs), "incident_type_2_diabetes", pheno)
   res[, model := this_rs]
 }
+
+qd_inci2 <- rbind(idcol = "model",
+  "QDiabetes2018B_fast_gte_3"=cox.test(sprintf(mf, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 3]),
+  "QDiabetes2018B_fast_gte_8"=cox.test(sprintf("%s ~ %s + age + sex", y, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 8])
+)
+qd_inci <- rbind(qd_inci, qd_inci2)
 
 pgs_inci <- foreach(this_pgs = names(pgs)[-1], .combine=rbind) %do% {
   res <- cox.test(sprintf(mf, this_pgs), "incident_type_2_diabetes", pheno)
@@ -242,6 +256,8 @@ inci[coefficient == "hypertension_medicationTRUE", coefficient := "Taking hypert
 inci[coefficient == "lipid_lowering_medicationTRUE", coefficient := "Taking lipid lowering medication"]
 inci[coefficient == "systematic_corticosteroidsTRUE", coefficient := "Taking systematic corticosteroids"]
 inci[coefficient == "atypical_antipsychoticsTRUE", coefficient := "Taking 2nd generation atypical antipsychotics"]
+inci[model == "QDiabetes2018B_fast_gte_3" & coefficient %like% "QDiabetes", coefficient := "QDiabetes 2018 model B (fasting ≥ 3hours)"]
+inci[model == "QDiabetes2018B_fast_gte_8" & coefficient %like% "QDiabetes", coefficient := "QDiabetes 2018 model B (fasting ≥ 8hours)"]
 
 # Write out
 fwrite(inci, sep="\t", quote=FALSE, file="output/UKB_tests/incident_T2D_associations_QDiabetes2018C_subset.txt")
