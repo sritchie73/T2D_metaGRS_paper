@@ -9,7 +9,6 @@ cox.test <- function(formula, event_col, data) {
 
   cx <- coxph(formula, data=data, x=TRUE) # fit the cox model
   ci <- confint(cx) # get 95% confidence intervals
-  cz <- cox.zph(cx, terms=FALSE) # test proportional hazards assumption
   cc <- as.integer(rownames(cx$x)) # get complete cases used to fit the model
 
   # now get C-index and its 95% CI
@@ -17,6 +16,16 @@ cox.test <- function(formula, event_col, data) {
   cindex.se <- summary(cx)$concordance[2]
   cindex.l95 <- cindex - qnorm(0.975)*cindex.se
   cindex.u95 <- cindex + qnorm(0.975)*cindex.se
+ 
+  # Test proportional hazards assumption (but don't error on failure)
+  cz <- tryCatch({
+	  cox.zph(cx, terms=FALSE) # test proportional hazards assumption
+  }, error = function(e) {
+    warning(e)
+    cz <- list(table=data.frame(chisq=NA, df=NA, p=NA))
+    rownames(cz$table) <- "GLOBAL"
+    return(cz)
+  })
 
   # collate information about all model coefficients
   cx <- as.data.table(coef(summary(cx)), keep.rownames="coefficient")

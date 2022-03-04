@@ -1,7 +1,5 @@
 #!/bin/bash
 
-mkdir -p data/UKB/T2D_PGS 
-
 # Build file listing PGS to compute
 uuid=$(uuidgen)
 mkdir -p tmp/$uuid

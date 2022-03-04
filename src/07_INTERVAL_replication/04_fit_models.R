@@ -38,6 +38,7 @@ hes <- fread(fname, na.strings=c("", "NA"))
 hes <- melt(hes, id.vars="identifier", value.name="event_date", na.rm=TRUE)
 hes[, event_date := as.IDate(event_date, format="%d%b%Y")]
 maxfollow <- hes[,max(event_date)]
+minfollow <- hes[,min(event_date)]
 
 # Extract diabetes (see caliber_event_names.csv file)
 diabetes <- hes[variable == "cal_ps_d_062", .(hes_id=identifier, event_date)]
@@ -146,4 +147,4 @@ inci[coefficient == "age", coefficient := "Age"]
 inci[coefficient == "sexMale", coefficient := "Sex: Male vs. Female"]
 
 # Write out
-fwrite(inci, sep="\t", quote=FALSE, file="output/UKB_tests/incident_diabetes_associations.txt")
+fwrite(inci, sep="\t", quote=FALSE, file="output/INTERVAL_tests/incident_diabetes_associations.txt")
