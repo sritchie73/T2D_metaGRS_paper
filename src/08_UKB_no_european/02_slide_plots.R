@@ -131,3 +131,124 @@ g_or <- ggplot(inci_pgs) +
     strip.text=element_text(size=8)
   )
 ggsave(g_auc, width=13.5, height=6, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_HR_compare.png")
+
+# Examine transferrability.
+
+# Filter to T2D metaGRS
+prev_pgs <- prev_pgs[coefficient == "T2D_metaGRS"]
+inci_pgs <- inci_pgs[coefficient == "T2D_metaGRS"]
+
+# Drop extraneous columns
+prev_pgs[, AUC_rank := NULL]
+prev_pgs[, metaGRS := NULL]
+
+inci_pgs[, Cindex_rank := NULL]
+inci_pgs[, metaGRS := NULL]
+
+# Add in White British cohort results
+prev_wb <- fread("output/UKB_tests/prevalent_T2D_associations.txt")
+prev_wb <- prev_wb[coefficient == "T2D_metaGRS"]
+prev_wb[, model_type := NULL]
+prev_wb[, grouping := "White British"]
+prev_wb[, group_column := "metaGRS_test_set"]
+prev_pgs <- rbind(prev_pgs, prev_wb)
+
+inci_wb <- fread("output/UKB_tests/incident_T2D_associations.txt")
+inci_wb <- inci_wb[coefficient == "T2D_metaGRS"]
+inci_wb[, model_type := NULL]
+inci_wb[, grouping := "White British"]
+inci_wb[, group_column := "metaGRS_test_set"]
+inci_pgs <- rbind(inci_pgs, inci_wb)
+
+# Relabel so axes are unique
+prev_pgs[, xlabel := fcase(
+	grouping == "White British" & group_column == "metaGRS_test_set", "White British (test set)",
+	grouping == "South Asian" & group_column == "ethnicity_grouping", "South Asian (supergroup)",
+	grouping == "Indian" & group_column == "ethnicity_subgroup", "Indian",
+	grouping == "Bangladeshi" & group_column == "ethnicity_subgroup", "Bangladeshi",
+	grouping == "Pakistani" & group_column == "ethnicity_subgroup", "Pakistani",
+	grouping == "East Asian" & group_column == "ethnicity_grouping", "East Asian (supergroup)",
+	grouping == "Chinese" & group_column == "ethnicity_subgroup",  "Chinese",
+	grouping == "Any other Asian background" & group_column == "ethnicity_subgroup", "Any other Asian background",
+	grouping == "African" & group_column == "ethnicity_grouping", "African (supergroup)",
+	grouping == "African" & group_column == "ethnicity_subgroup", "African",
+	grouping == "Caribbean" & group_column == "ethnicity_subgroup", "Caribbean",
+	grouping == "Other ethnic group" & group_column == "ethnicity_subgroup", "Other ethnic group",
+	grouping == "Other" & group_column == "ethnicity_qdiabetes_groups", "Other (QDiabetes supergroup)",
+	grouping == "OtherAsian" & group_column == "ethnicity_qdiabetes_groups", "Other Asian (QDiabetes supergroup)"
+)]
+prev_pgs[, xlabel := factor(xlabel, levels=c(
+	"White British (test set)",
+  "South Asian (supergroup)", "Indian", "Bangladeshi", "Pakistani",
+  "East Asian (supergroup)", "Chinese", "Any other Asian background",
+  "African (supergroup)", "African", "Caribbean",
+  "Other ethnic group",
+  "Other (QDiabetes supergroup)",
+  "Other Asian (QDiabetes supergroup)"
+))]
+
+inci_pgs[, xlabel := fcase(
+	grouping == "White British" & group_column == "metaGRS_test_set", "White British (test set)",
+	grouping == "South Asian" & group_column == "ethnicity_grouping", "South Asian (supergroup)",
+	grouping == "Indian" & group_column == "ethnicity_subgroup", "Indian",
+	grouping == "Bangladeshi" & group_column == "ethnicity_subgroup", "Bangladeshi",
+	grouping == "Pakistani" & group_column == "ethnicity_subgroup", "Pakistani",
+	grouping == "East Asian" & group_column == "ethnicity_grouping", "East Asian (supergroup)",
+	grouping == "Chinese" & group_column == "ethnicity_subgroup",  "Chinese",
+	grouping == "Any other Asian background" & group_column == "ethnicity_subgroup", "Any other Asian background",
+	grouping == "African" & group_column == "ethnicity_grouping", "African (supergroup)",
+	grouping == "African" & group_column == "ethnicity_subgroup", "African",
+	grouping == "Caribbean" & group_column == "ethnicity_subgroup", "Caribbean",
+	grouping == "Other ethnic group" & group_column == "ethnicity_subgroup", "Other ethnic group",
+	grouping == "Other" & group_column == "ethnicity_qdiabetes_groups", "Other (QDiabetes supergroup)",
+	grouping == "OtherAsian" & group_column == "ethnicity_qdiabetes_groups", "Other Asian (QDiabetes supergroup)"
+)]
+inci_pgs[, xlabel := factor(xlabel, levels=c(
+	"White British (test set)",
+  "South Asian (supergroup)", "Indian", "Bangladeshi", "Pakistani",
+  "East Asian (supergroup)", "Chinese", "Any other Asian background",
+  "African (supergroup)", "African", "Caribbean",
+  "Other ethnic group",
+  "Other (QDiabetes supergroup)",
+  "Other Asian (QDiabetes supergroup)"
+))]
+
+# Build plots
+g_or <- ggplot(prev_pgs) +
+  aes(y=OR, ymin=OR.L95, ymax=OR.U95, x=xlabel) +
+  geom_hline(yintercept=1, linetype=2) +
+  geom_errorbar(width=0, alpha=0.8, color="#ae017e") +
+  geom_point(shape=19, color="#ae017e") +
+  xlab("") +
+  ylab("Odds Ratio (95% CI)") +
+  theme_bw() +
+  theme(
+    legend.position="none",
+    panel.grid.major.x=element_blank(),
+    panel.grid.minor.x=element_blank(),
+    axis.text.x=element_text(size=8, angle=90, hjust=1, vjust=0.5),
+    axis.text.y=element_text(size=8),
+    axis.title=element_text(size=10)
+  )
+
+g_hr <- ggplot(inci_pgs) +
+  aes(y=HR, ymin=L95, ymax=U95, x=xlabel) +
+  geom_hline(yintercept=1, linetype=2) +
+  geom_errorbar(width=0, alpha=0.8, color="#ae017e") +
+  geom_point(shape=19, color="#ae017e") +
+  xlab("") +
+  ylab("Hazard Ratio (95% CI)") +
+  theme_bw() +
+  theme(
+    legend.position="none",
+    panel.grid.major.x=element_blank(),
+    panel.grid.minor.x=element_blank(),
+    axis.text.x=element_text(size=8, angle=90, hjust=1, vjust=0.5),
+    axis.text.y=element_text(size=8),
+    axis.title=element_text(size=10)
+  )
+
+g <- plot_grid(g_or, g_hr, nrow=2, align="hv")
+ggsave(g, width=7.2, height=7.2, units="in", file="output/slide_deck_plots/UKB_T2D_metaGRS_transferrability.png")
+
+
