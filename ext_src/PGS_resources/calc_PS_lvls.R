@@ -1304,16 +1304,16 @@ for(chr in c(1:22, "X", "Y", "XY", "MT")) {
   varmatchfiles <- list.files(path=work_dir, pattern=sprintf("collated_scores_.*_variants_chr%s_.*.txt", chr), full.names=TRUE)
   if (length(varmatchfiles) == 0) next # nothing on this chromosome
   varmatch <- foreach(ff = varmatchfiles, .combine=rbindu) %do% {
-	  fread(ff, header=FALSE)
+	  sfread(ff, header=FALSE)
   }
   setnames(varmatch, "match_id")
 
   # Load full variant information for this chromosome
   if (args[["--genotype-format"]] == "pfile") {
-    varinfo <- fread(sprintf("%s/chr%s.pvar", work_dir, chr))
+    varinfo <- sfread(sprintf("%s/chr%s.pvar", work_dir, chr))
     setnames(varinfo, c("chromosome", "position", "match_id", "ref_allele", "alt_allele"))
   } else if (args[["--genotype-format"]] == "bfile") {
-    varinfo <- fread(sprintf("%s/chr%s.bim", work_dir, chr))
+    varinfo <- sfread(sprintf("%s/chr%s.bim", work_dir, chr))
     setnames(varinfo, c("chromosome", "match_id", "centimorgan", "position", "minor_allele", "major_allele"))
   }
 
@@ -1326,20 +1326,20 @@ for(chr in c(1:22, "X", "Y", "XY", "MT")) {
 		if (grepl("^##", line1)) {
 			varinfo[, rsid := sfread(origfile, cmd="grep -v '^#' %s", sep="\t")[["V3"]]]
     } else {
-			varinfo[, rsid := fread(cmd=sprintf("tail -n +2 %s | cut -f 3", origfile), header=FALSE)[[1]]]
+			varinfo[, rsid := sfread(origfile, cmd="tail -n +2 %s | cut -f 3", header=FALSE)[[1]]]
     }
   } else if (args[["--genotype-format"]] == "bfile") {
-    varinfo[, rsid := fread(cmd=sprintf("cut -f 2 %s.bim", origfile), header=FALSE)[[1]]]
+    varinfo[, rsid := sfread(origfile, cmd="cut -f 2 %s.bim", header=FALSE)[[1]]]
   }
 
   # Obtain the effect allele frequency, if applicable
   denovofreqxfile <- sprintf("%s/ambig_freqx_extract_chr%s.afreq", work_dir, chr)
   if (file.exists(denovofreqxfile)) {
-    freqx <- fread(denovofreqxfile)
+    freqx <- sfread(denovofreqxfile)
     freqx <- freqx[, .(match_id=ID, alt_frequency=ALT_FREQS)]
     varinfo[freqx, on = .(match_id), alt_frequency := i.alt_frequency]
   } else if (exists("freqx_ext")) {
-    freqx <- fread(sprintf("%s/chr%s.%s", work_dir, chr, freqx_ext))
+    freqx <- sfread(sprintf("%s/chr%s.%s", work_dir, chr, freqx_ext))
 		if (freqx_ext == "frqx") {
 			freqx <- freqx[, .(match_id=SNP, MAF=(`C(HOM A1)`*2+`C(HET)`)/(`C(HOM A1)`*2+`C(HET)`+`C(HOM A2)`*2))]
       varinfo[freqx, on = .(match_id), MAF := i.MAF]
