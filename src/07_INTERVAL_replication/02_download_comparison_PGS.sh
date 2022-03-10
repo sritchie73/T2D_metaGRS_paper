@@ -14,7 +14,7 @@ mkdir -p data/T2D_PGS/UKB_invalid
   --pgsid PGS000868 --name Aksit2020 --out data/T2D_PGS/UKB_invalid/Aksit2020
 
 ./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
-  --pgsid PGS000713 --name SinnottArmstrong2021 data/T2D_PGS/UKB_invalid/SinnottArmstrong2021
+  --pgsid PGS000713 --name SinnottArmstrong2021 --out data/T2D_PGS/UKB_invalid/SinnottArmstrong2021
 
 ./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
   --pgsid PGS000729 --name Ritchie2021 --out data/T2D_PGS/UKB_invalid/Ritchie2021
