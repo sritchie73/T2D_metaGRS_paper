@@ -3,7 +3,7 @@ library(ggplot2)
 library(cowplot)
 
 # Make output directory
-system("mkdir -p output/slide_deck_plots/", wait=TRUE)
+system("mkdir -p output/slide_deck_plots/2023-02-10-highlights/", wait=TRUE)
 
 # Load association results
 prev <- fread("output/INTERVAL_tests/prevalent_diabetes_associations.txt")
@@ -119,5 +119,5 @@ g_hr <- ggplot(inci_pgs) +
   )
 
 g <- plot_grid(g_auc, g_cind, g_or, g_hr, nrow=2, align="hv")
-ggsave(g, width=7.2, height=7.2, units="in", file="output/slide_deck_plots/INTERVAL_pgs_comparison.png")
+ggsave(g, width=7.2, height=7.2, units="in", file="output/slide_deck_plots/2023-02-10-highlights/INTERVAL_pgs_comparison.png")
 

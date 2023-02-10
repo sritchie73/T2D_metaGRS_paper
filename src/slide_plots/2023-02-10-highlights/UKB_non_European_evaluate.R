@@ -3,7 +3,7 @@ library(ggplot2)
 library(cowplot)
 
 # Make output directory
-system("mkdir -p output/slide_deck_plots/", wait=TRUE)
+system("mkdir -p output/slide_deck_plots/2023-02-10-highlights/", wait=TRUE)
 
 # Load associations across different ancestry groups
 prev <- fread("output/UKB_tests/non_european_prevalent_T2D_associations.txt")
@@ -84,7 +84,7 @@ g_auc <- ggplot(prev_pgs) +
     axis.title=element_text(size=10),
     strip.text=element_text(size=8)
   )
-ggsave(g_auc, width=9, height=4, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_AUC_compare.png")
+ggsave(g_auc, width=9, height=4, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_non_european_PGS_AUC_compare.png")
 
 g_or <- ggplot(prev_pgs) +
   aes(y=OR, ymin=OR.L95, ymax=OR.U95, x=coefficient, color=metaGRS) +
@@ -105,7 +105,7 @@ g_or <- ggplot(prev_pgs) +
     axis.title=element_text(size=10),
     strip.text=element_text(size=8)
   )
-ggsave(g_or, width=9, height=4, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_OR_compare.png")
+ggsave(g_or, width=9, height=4, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_non_european_PGS_OR_compare.png")
 
 g_cind <- ggplot(inci_pgs) +
   aes(y=C.index, ymin=C.L95, ymax=C.U95, x=coefficient, color=metaGRS) +
@@ -129,7 +129,7 @@ g_cind <- ggplot(inci_pgs) +
     axis.title=element_text(size=10),
     strip.text=element_text(size=8)
   )
-ggsave(g_cind, width=9, height=4, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_Cindex_compare.png")
+ggsave(g_cind, width=9, height=4, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_non_european_PGS_Cindex_compare.png")
 
 g_hr <- ggplot(inci_pgs) +
   aes(y=HR, ymin=L95, ymax=U95, x=coefficient, color=metaGRS) +
@@ -150,7 +150,7 @@ g_hr <- ggplot(inci_pgs) +
     axis.title=element_text(size=10),
     strip.text=element_text(size=8)
   )
-ggsave(g_hr, width=9, height=4, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_HR_compare.png")
+ggsave(g_hr, width=9, height=4, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_non_european_PGS_HR_compare.png")
 
 # Examine transferrability.
 
@@ -271,6 +271,6 @@ g_hr <- ggplot(inci_pgs) +
   )
 
 g <- plot_grid(g_or, g_hr, align="hv")
-ggsave(g, width=4, height=7.2, units="in", file="output/slide_deck_plots/UKB_T2D_metaGRS_transferrability.png")
+ggsave(g, width=4, height=7.2, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_T2D_metaGRS_transferrability.png")
 
 
