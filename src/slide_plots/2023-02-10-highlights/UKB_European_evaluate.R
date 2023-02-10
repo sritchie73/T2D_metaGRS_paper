@@ -4,7 +4,7 @@ library(cowplot)
 library(ggforce)
 
 # Make output directory
-system("mkdir -p output/slide_deck_plots/", wait=TRUE)
+system("mkdir -p output/slide_deck_plots/2023-02-10-highlights/", wait=TRUE)
 
 # Load association results
 prev <- fread("output/UKB_tests/prevalent_T2D_associations.txt")
@@ -120,7 +120,7 @@ g_hr <- ggplot(inci_pgs) +
   )
 
 g <- plot_grid(g_auc, g_cind, g_or, g_hr, nrow=2, align="hv")
-ggsave(g, width=7.2, height=7.2, units="in", file="output/slide_deck_plots/UKB_pgs_comparison.png")
+ggsave(g, width=7.2, height=7.2, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_pgs_comparison.png")
 
 # Compare QDiabetes scores
 qdiab <- fread("output/UKB_tests/incident_T2D_associations.txt")
@@ -165,7 +165,7 @@ g_hr <- ggplot(qdiab) +
   )
 
 g <- plot_grid(g_cind, g_hr, nrow=1, align="hv")
-ggsave(g, width=13, height=3, units="in", file="output/slide_deck_plots/UKB_qdiab_comparison.png")
+ggsave(g, width=13, height=3, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_qdiab_comparison.png")
 
 # Plot again in QDiabetes model C subset
 qdiab <- fread("output/UKB_tests/incident_T2D_associations_QDiabetes2018C_subset.txt")
@@ -210,7 +210,7 @@ g_hr <- ggplot(qdiab) +
   )
 
 g <- plot_grid(g_cind, g_hr, nrow=1, align="hv")
-ggsave(g, width=13, height=3, units="in", file="output/slide_deck_plots/UKB_qdiab_comparison_modelC_subset.png")
+ggsave(g, width=13, height=3, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_qdiab_comparison_modelC_subset.png")
 
 # Plot C-index for GRS vs. QDiabetes and risk factors
 inci <- fread("output/UKB_tests/incident_T2D_associations_QDiabetes2018C_subset.txt")
@@ -275,7 +275,7 @@ g <- ggplot(fit) +
     strip.text=element_text(size=8, face=2), 
     strip.background=element_blank()
   )
-ggsave(g, width=7.2, height=7.2, units="in", file="output/slide_deck_plots/UKB_prs_risk_factor_cindex_comparison.png")
+ggsave(g, width=7.2, height=7.2, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_prs_risk_factor_cindex_comparison.png")
 
 # Show hazard ratios
 inci <- fread("output/UKB_tests/incident_T2D_associations_QDiabetes2018C_subset.txt")
@@ -332,5 +332,5 @@ g <- ggplot(hrs) +
     strip.text=element_text(size=8, face=2), 
     strip.background=element_blank()
   )
-ggsave(g, width=7.2, height=7.2, units="in", file="output/slide_deck_plots/UKB_prs_risk_factor_hazard_ratio_comparison.png")
+ggsave(g, width=7.2, height=7.2, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_prs_risk_factor_hazard_ratio_comparison.png")
 
