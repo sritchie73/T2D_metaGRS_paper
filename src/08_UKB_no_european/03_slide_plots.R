@@ -85,7 +85,7 @@ g_or <- ggplot(prev_pgs) +
     axis.title=element_text(size=10),
     strip.text=element_text(size=8)
   )
-ggsave(g_auc, width=13.5, height=6, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_OR_compare.png")
+ggsave(g_or, width=13.5, height=6, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_OR_compare.png")
 
 g_cind <- ggplot(inci_pgs) +
   aes(y=C.index, ymin=C.L95, ymax=C.U95, x=coefficient, color=metaGRS) +
@@ -109,9 +109,9 @@ g_cind <- ggplot(inci_pgs) +
     axis.title=element_text(size=10),
     strip.text=element_text(size=8)
   )
-ggsave(g_auc, width=13.5, height=6, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_Cindex_compare.png")
+ggsave(g_cind, width=13.5, height=6, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_Cindex_compare.png")
 
-g_or <- ggplot(inci_pgs) +
+g_hr <- ggplot(inci_pgs) +
   aes(y=HR, ymin=L95, ymax=U95, x=coefficient, color=metaGRS) +
   geom_hline(yintercept=1, linetype=2) +
   geom_errorbar(width=0, alpha=0.8) +
@@ -130,7 +130,7 @@ g_or <- ggplot(inci_pgs) +
     axis.title=element_text(size=10),
     strip.text=element_text(size=8)
   )
-ggsave(g_auc, width=13.5, height=6, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_HR_compare.png")
+ggsave(g_hr, width=13.5, height=6, units="in", file="output/slide_deck_plots/UKB_non_european_PGS_HR_compare.png")
 
 # Examine transferrability.
 
