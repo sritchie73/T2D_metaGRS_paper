@@ -231,6 +231,8 @@ multi[, model_type := "multivariate"]
 
 fit <- rbind(fit, multi)
 
+fit <- fit[!(coefficient %like% "Gad")]
+
 fit <- fit[order(-C.index)]
 fit[, model := factor(model, levels=unique(model))]
 fit[, model_type := fcase(
@@ -298,6 +300,8 @@ multi[, model := coefficient]
 multi[, model_type := gsub("PGS", "T2D_metaGRS", model_type)]
 
 hrs <- rbind(uni, multi)
+
+hrs <- hrs[!(model %like% "Gad")]
 
 hrs <- hrs[order(-abs(logHR))]
 
