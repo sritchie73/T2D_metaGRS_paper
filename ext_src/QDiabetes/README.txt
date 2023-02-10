@@ -973,7 +973,8 @@ The following were the drugs considered as lipid lowering treatments:
       1140861892                                   acipimox
       1141146234                               atorvastatin
       1140861924                                bezafibrate
-      1141157260                        bezafibrate product                                                                                                                                                                                        1140862026                               ciprofibrate
+      1141157260                        bezafibrate product
+      1140862026                               ciprofibrate
       1140888590                                 colestipol
       1140909780                              colestyramine
       1141180734                      colestyramine product
