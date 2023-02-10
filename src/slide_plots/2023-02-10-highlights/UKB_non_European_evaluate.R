@@ -181,57 +181,6 @@ inci_wb[, group_column := "metaGRS_test_set"]
 inci_pgs <- rbind(inci_pgs, inci_wb)
 
 # Relabel so axes are unique
-##' prev_pgs[, xlabel := fcase(
-##' 	grouping == "White British" & group_column == "metaGRS_test_set", "White British (test set)",
-##' 	grouping == "South Asian" & group_column == "ethnicity_grouping", "South Asian (supergroup)",
-##' 	grouping == "Indian" & group_column == "ethnicity_subgroup", "Indian",
-##' 	grouping == "Bangladeshi" & group_column == "ethnicity_subgroup", "Bangladeshi",
-##' 	grouping == "Pakistani" & group_column == "ethnicity_subgroup", "Pakistani",
-##' 	grouping == "East Asian" & group_column == "ethnicity_grouping", "East Asian (supergroup)",
-##' 	grouping == "Chinese" & group_column == "ethnicity_subgroup",  "Chinese",
-##' 	grouping == "Any other Asian background" & group_column == "ethnicity_subgroup", "Any other Asian background",
-##' 	grouping == "African" & group_column == "ethnicity_grouping", "African (supergroup)",
-##' 	grouping == "African" & group_column == "ethnicity_subgroup", "African",
-##' 	grouping == "Caribbean" & group_column == "ethnicity_subgroup", "Caribbean",
-##' 	grouping == "Other ethnic group" & group_column == "ethnicity_subgroup", "Other ethnic group",
-##' 	grouping == "Other" & group_column == "ethnicity_qdiabetes_groups", "Other (QDiabetes supergroup)",
-##' 	grouping == "OtherAsian" & group_column == "ethnicity_qdiabetes_groups", "Other Asian (QDiabetes supergroup)"
-##' )]
-##' prev_pgs[, xlabel := factor(xlabel, levels=c(
-##' 	"White British (test set)",
-##'   "South Asian (supergroup)", "Indian", "Bangladeshi", "Pakistani",
-##'   "East Asian (supergroup)", "Chinese", "Any other Asian background",
-##'   "African (supergroup)", "African", "Caribbean",
-##'   "Other ethnic group",
-##'   "Other (QDiabetes supergroup)",
-##'   "Other Asian (QDiabetes supergroup)"
-##' ))]
-##' 
-##' inci_pgs[, xlabel := fcase(
-##' 	grouping == "White British" & group_column == "metaGRS_test_set", "White British (test set)",
-##' 	grouping == "South Asian" & group_column == "ethnicity_grouping", "South Asian (supergroup)",
-##' 	grouping == "Indian" & group_column == "ethnicity_subgroup", "Indian",
-##' 	grouping == "Bangladeshi" & group_column == "ethnicity_subgroup", "Bangladeshi",
-##' 	grouping == "Pakistani" & group_column == "ethnicity_subgroup", "Pakistani",
-##' 	grouping == "East Asian" & group_column == "ethnicity_grouping", "East Asian (supergroup)",
-##' 	grouping == "Chinese" & group_column == "ethnicity_subgroup",  "Chinese",
-##' 	grouping == "Any other Asian background" & group_column == "ethnicity_subgroup", "Any other Asian background",
-##' 	grouping == "African" & group_column == "ethnicity_grouping", "African (supergroup)",
-##' 	grouping == "African" & group_column == "ethnicity_subgroup", "African",
-##' 	grouping == "Caribbean" & group_column == "ethnicity_subgroup", "Caribbean",
-##' 	grouping == "Other ethnic group" & group_column == "ethnicity_subgroup", "Other ethnic group",
-##' 	grouping == "Other" & group_column == "ethnicity_qdiabetes_groups", "Other (QDiabetes supergroup)",
-##' 	grouping == "OtherAsian" & group_column == "ethnicity_qdiabetes_groups", "Other Asian (QDiabetes supergroup)"
-##' )]
-##' inci_pgs[, xlabel := factor(xlabel, levels=c(
-##' 	"White British (test set)",
-##'   "South Asian (supergroup)", "Indian", "Bangladeshi", "Pakistani",
-##'   "East Asian (supergroup)", "Chinese", "Any other Asian background",
-##'   "African (supergroup)", "African", "Caribbean",
-##'   "Other ethnic group",
-##'   "Other (QDiabetes supergroup)",
-##'   "Other Asian (QDiabetes supergroup)"
-##' ))]
 prev_pgs[, xlabel := factor(grouping, levels=c("White British", "South Asian", "East Asian", "Other non-European", "African"))]
 inci_pgs[, xlabel := factor(grouping, levels=c("White British", "South Asian", "East Asian", "Other non-European", "African"))]
 
