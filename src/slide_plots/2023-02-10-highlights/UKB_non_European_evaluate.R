@@ -219,7 +219,7 @@ g_hr <- ggplot(inci_pgs) +
     axis.title=element_text(size=10)
   )
 
-g <- plot_grid(g_or, g_hr, align="hv")
+g <- plot_grid(g_or, g_hr, nrow=2, align="hv")
 ggsave(g, width=4, height=7.2, units="in", file="output/slide_deck_plots/2023-02-10-highlights/UKB_T2D_metaGRS_transferrability.png")
 
 
