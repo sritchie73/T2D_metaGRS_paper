@@ -17,6 +17,7 @@ for gwas_dir in output/ldpred2/train/*; do
 		--keep-ambiguous \
 		--work output/ldpred2/all_hyperparam_grs_lvls/$gwas \
 		--out output/ldpred2/all_hyperparam_grs_lvls/$gwas \
+    --partition icelake \
     --time 8:0:0 \
     --single-out collated_scores
 

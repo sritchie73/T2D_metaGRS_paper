@@ -64,26 +64,24 @@ pheno[, QDiabetes2018B_fasting := scale(logit(QDiabetes2018B_fasting/100))]
 pheno[, QDiabetes2018B_non_fasting := scale(logit(QDiabetes2018B_non_fasting/100))]
 pheno[, QDiabetes2018C := scale(logit(QDiabetes2018C/100))]
 pheno[, assessment_centre := factor_by_size(assessment_centre)]
-pheno[, censor_hospital_nation := factor_by_size(censor_hospital_nation)]
-pheno[is.na(earliest_hospital_nation) & !(type_2_diabetes), earliest_hospital_nation := assessment_nation] # N=5 Prevalent T2D cases from self-report who've withdrawn consent for hospital record linkage
-pheno[, earliest_hospital_nation := factor_by_size(earliest_hospital_nation)]
 
 # Drop participants free of T2D at baseline who have withdrawn consent for hospital record
 # linkage and people with uncertain diabetes status
-pheno <- pheno[!is.na(type_2_diabetes) & !is.na(earliest_hospital_nation)]
+pheno <- pheno[!is.na(type_2_diabetes) & !is.na(earliest_hospital_date)]
+stop()
 
 # First examine prevalent T2D
 prev <- rbind(idcol="model",
   "age"=glm.test(type_2_diabetes ~ age, "type_2_diabetes", pheno),
   "sex"=glm.test(type_2_diabetes ~ sex, "type_2_diabetes", pheno),
-  "follow_diff"=glm.test(type_2_diabetes ~ assessment_centre + earliest_hospital_nation, "type_2_diabetes", pheno),
+  "assessment_centre"=glm.test(type_2_diabetes ~ assessment_centre, "type_2_diabetes", pheno),
   "age + sex"=glm.test(type_2_diabetes ~ age + sex, "type_2_diabetes", pheno),
-  "age + follow_diff"=glm.test(type_2_diabetes ~ age + assessment_centre + earliest_hospital_nation, "type_2_diabetes", pheno),
-  "sex + follow_diff"=glm.test(type_2_diabetes ~ sex + assessment_centre + earliest_hospital_nation, "type_2_diabetes", pheno),
-  "age + sex + follow_diff"=glm.test(type_2_diabetes ~ age + sex + assessment_centre + earliest_hospital_nation, "type_2_diabetes", pheno)
+  "age + assessment_centre"=glm.test(type_2_diabetes ~ age + assessment_centre, "type_2_diabetes", pheno),
+  "sex + assessment_centre"=glm.test(type_2_diabetes ~ sex + assessment_centre, "type_2_diabetes", pheno),
+  "age + sex + assessment_centre"=glm.test(type_2_diabetes ~ age + sex + assessment_centre, "type_2_diabetes", pheno)
 )
 
-mf <- "type_2_diabetes ~ %s + age + sex + assessment_centre + earliest_hospital_nation"
+mf <- "type_2_diabetes ~ %s + age + sex + assessment_centre"
 prs_prev <- foreach(this_pgs = names(pgs)[-1], .combine=rbind) %do% {
   res <- glm.test(sprintf(mf, this_pgs), "type_2_diabetes", pheno)
   res[, model := this_pgs]
@@ -94,8 +92,6 @@ prev <- rbind(idcol="model_type", "reference"=prev, "pgs"=prs_prev)
 # Rename coefficients for readability
 prev[coefficient == "age", coefficient := "Age"]
 prev[coefficient == "sexMale", coefficient := "Sex: Male vs. Female"]
-prev[coefficient %like% "earliest_hospital_nation", coefficient := 
-  sprintf("Earliest hospital nation: %s vs. England", gsub("earliest_hospital_nation", "", coefficient))]
 prev[coefficient %like% "assessment_centre", coefficient :=
   sprintf("Assessment centre: %s vs. %s", gsub("(assessment_centre)|( \\(.*\\))", "", coefficient),
   levels(pheno$assessment_centre)[1])]
@@ -105,18 +101,17 @@ fwrite(prev, sep="\t", quote=FALSE, file="output/UKB_tests/prevalent_T2D_associa
 
 # Now do incident T2D
 y <- "Surv(incident_censor_years, incident_type_2_diabetes)"
-follow_diff <- "assessment_centre + earliest_hospital_nation + censor_hospital_nation"
 inci <- rbind(idcol="model",
   "age"=cox.test(paste(y, "~ age"), "incident_type_2_diabetes", pheno),
   "sex"=cox.test(paste(y, "~ sex"), "incident_type_2_diabetes", pheno),
-  "follow_diff"=cox.test(paste(y, "~", follow_diff), "incident_type_2_diabetes", pheno),
+  "assessment_centre"=cox.test(paste(y, "~ assessment_centre"), "incident_type_2_diabetes", pheno),
   "age + sex"=cox.test(paste(y, "~ age + sex"), "incident_type_2_diabetes", pheno),
-  "age + follow_diff"=cox.test(paste(y, "~ age +", follow_diff), "incident_type_2_diabetes", pheno),
-  "sex + follow_diff"=cox.test(paste(y, "~ sex +", follow_diff), "incident_type_2_diabetes", pheno),
-  "age + sex + follow_diff"=cox.test(paste(y, "~ age + sex +", follow_diff), "incident_type_2_diabetes", pheno),
+  "age + assessment_centre"=cox.test(paste(y, "~ age + assessment_centre"), "incident_type_2_diabetes", pheno),
+  "sex + assessment_centre"=cox.test(paste(y, "~ sex + assessment_centre"), "incident_type_2_diabetes", pheno),
+  "age + sex + assessment_centre"=cox.test(paste(y, "~ age + sex + assessment_centre"), "incident_type_2_diabetes", pheno),
   "strata(sex) + age"=cox.test(paste(y, "~ age + strata(sex)"), "incident_type_2_diabetes", pheno),
-  "strata(sex) + follow_diff"=cox.test(paste(y, "~ strata(sex) +", follow_diff), "incident_type_2_diabetes", pheno),
-  "strata(sex) + age + follow_diff"=cox.test(paste(y, "~ age + strata(sex) +", follow_diff), "incident_type_2_diabetes", pheno)
+  "strata(sex) + assessment_centre"=cox.test(paste(y, "~ strata(sex) + assessment_centre"), "incident_type_2_diabetes", pheno),
+  "strata(sex) + age + assessment_centre"=cox.test(paste(y, "~ age + strata(sex) + assessment_centre"), "incident_type_2_diabetes", pheno)
 )
 
 # Treating sex as a factor variable instead of stratifying for different baseline hazards between males and females
@@ -125,41 +120,39 @@ rf <- c("bmi", "smoking_status", "townsend", "family_history_diabetes", "history
         "history_pcos", "history_learning_difficulties", "history_bipolar_schizophrenia", "hypertension_medication", 
         "lipid_lowering_medication", "systematic_corticosteroids", "atypical_antipsychotics", "hba1c", "fasting_glucose", 
         "non_fasting_glucose")
-mf <- paste(y, "~ %s + age + sex +", follow_diff)
+mf <- paste(y, "~ %s + age + sex + assessment_centre")
 rf_inci <- foreach(this_rf = rf, .combine=rbind) %do% {
   res <- cox.test(sprintf(mf, this_rf), "incident_type_2_diabetes", pheno)
   res[, model := this_rf]
 } 
-
-qdiab <- c("QDiabetes2018A", "QDiabetes2018B_fasting", "QDiabetes2018B_non_fasting", "QDiabetes2018C", "QDiabetes2013")
-qd_inci <- foreach(this_rs = qdiab, .combine=rbind) %do% {
-  res <- cox.test(sprintf(mf, this_rs), "incident_type_2_diabetes", pheno)
-  res[, model := this_rs]
-}
-
-qd_inci2 <- rbind(idcol = "model",
-  "QDiabetes2018B_fast_gte_3"=cox.test(sprintf(mf, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 3]),
-  "QDiabetes2018B_fast_gte_8"=cox.test(sprintf("%s ~ %s + age + sex", y, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 8])
-)
-qd_inci <- rbind(qd_inci, qd_inci2)
 
 pgs_inci <- foreach(this_pgs = names(pgs)[-1], .combine=rbind) %do% {
   res <- cox.test(sprintf(mf, this_pgs), "incident_type_2_diabetes", pheno)
   res[, model := this_pgs]
 }
 
+qdiab <- c("QDiabetes2018A", "QDiabetes2018B_fasting", "QDiabetes2018B_non_fasting", "QDiabetes2018C", "QDiabetes2013")
+mf2 <- paste(y, "~ %s + assessment_centre") # no need to adjust for age and sex, these are incorporated into QDiabetes
+qd_inci <- foreach(this_rs = qdiab, .combine=rbind) %do% {
+  res <- cox.test(sprintf(mf2, this_rs), "incident_type_2_diabetes", pheno)
+  res[, model := this_rs]
+}
+
+qd_inci2 <- rbind(idcol = "model",
+  "QDiabetes2018B_fast_gte_3"=cox.test(sprintf(mf2, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 3]),
+  "QDiabetes2018B_fast_gte_8"=cox.test(sprintf("%s ~ %s + assessment_centre", y, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 8])
+)
+qd_inci <- rbind(qd_inci, qd_inci2)
+
+
 inci <- rbind(idcol="model_type", "reference"=inci, "risk factor"=rf_inci, "QDiabetes"=qd_inci, "PGS"=pgs_inci)
 
 # Rename coefficients for readability
 inci[coefficient == "age", coefficient := "Age"]
 inci[coefficient == "sexMale", coefficient := "Sex: Male vs. Female"]
-inci[coefficient %like% "earliest_hospital_nation", coefficient := 
-  sprintf("Earliest hospital nation: %s vs. England", gsub("earliest_hospital_nation", "", coefficient))]
 inci[coefficient %like% "assessment_centre", coefficient :=
   sprintf("Assessment centre: %s vs. %s", gsub("(assessment_centre)|( \\(.*\\))", "", coefficient),
   levels(pheno$assessment_centre)[1])]
-inci[coefficient %like% "censor_hospital_nation", coefficient := 
-  sprintf("Censor hospital nation: %s vs. England", gsub("censor_hospital_nation", "", coefficient))]
 inci[coefficient %like% "smoking_status", coefficient :=
   sprintf("Smoking status: %s vs. Non-smoker", gsub("smoking_status", "", coefficient))]
 inci[coefficient == "bmi", coefficient := "Body mass index"]
@@ -193,14 +186,14 @@ pheno <- pheno[!is.na(QDiabetes2018C)]
 inci <- rbind(idcol="model",
   "age"=cox.test(paste(y, "~ age"), "incident_type_2_diabetes", pheno),
   "sex"=cox.test(paste(y, "~ sex"), "incident_type_2_diabetes", pheno),
-  "follow_diff"=cox.test(paste(y, "~", follow_diff), "incident_type_2_diabetes", pheno),
+  "assessment_centre"=cox.test(paste(y, "~ assessment_centre"), "incident_type_2_diabetes", pheno),
   "age + sex"=cox.test(paste(y, "~ age + sex"), "incident_type_2_diabetes", pheno),
-  "age + follow_diff"=cox.test(paste(y, "~ age +", follow_diff), "incident_type_2_diabetes", pheno),
-  "sex + follow_diff"=cox.test(paste(y, "~ sex +", follow_diff), "incident_type_2_diabetes", pheno),
-  "age + sex + follow_diff"=cox.test(paste(y, "~ age + sex +", follow_diff), "incident_type_2_diabetes", pheno),
+  "age + assessment_centre"=cox.test(paste(y, "~ age + assessment_centre"), "incident_type_2_diabetes", pheno),
+  "sex + assessment_centre"=cox.test(paste(y, "~ sex + assessment_centre"), "incident_type_2_diabetes", pheno),
+  "age + sex + assessment_centre"=cox.test(paste(y, "~ age + sex + assessment_centre"), "incident_type_2_diabetes", pheno),
   "strata(sex) + age"=cox.test(paste(y, "~ age + strata(sex)"), "incident_type_2_diabetes", pheno),
-  "strata(sex) + follow_diff"=cox.test(paste(y, "~ strata(sex) +", follow_diff), "incident_type_2_diabetes", pheno),
-  "strata(sex) + age + follow_diff"=cox.test(paste(y, "~ age + strata(sex) +", follow_diff), "incident_type_2_diabetes", pheno)
+  "strata(sex) + assessment_centre"=cox.test(paste(y, "~ strata(sex) + assessment_centre"), "incident_type_2_diabetes", pheno),
+  "strata(sex) + age + assessment_centre"=cox.test(paste(y, "~ age + strata(sex) + assessment_centre"), "incident_type_2_diabetes", pheno)
 )
 
 rf_inci <- foreach(this_rf = rf, .combine=rbind) %do% {
@@ -209,13 +202,13 @@ rf_inci <- foreach(this_rf = rf, .combine=rbind) %do% {
 } 
 
 qd_inci <- foreach(this_rs = qdiab, .combine=rbind) %do% {
-  res <- cox.test(sprintf(mf, this_rs), "incident_type_2_diabetes", pheno)
+  res <- cox.test(sprintf(mf2, this_rs), "incident_type_2_diabetes", pheno)
   res[, model := this_rs]
 }
 
 qd_inci2 <- rbind(idcol = "model",
-  "QDiabetes2018B_fast_gte_3"=cox.test(sprintf(mf, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 3]),
-  "QDiabetes2018B_fast_gte_8"=cox.test(sprintf("%s ~ %s + age + sex", y, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 8])
+  "QDiabetes2018B_fast_gte_3"=cox.test(sprintf(mf2, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 3]),
+  "QDiabetes2018B_fast_gte_8"=cox.test(sprintf("%s ~ %s + assessment_centre", y, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 8])
 )
 qd_inci <- rbind(qd_inci, qd_inci2)
 
@@ -228,13 +221,9 @@ inci <- rbind(idcol="model_type", "reference"=inci, "risk factor"=rf_inci, "QDia
 
 inci[coefficient == "age", coefficient := "Age"]
 inci[coefficient == "sexMale", coefficient := "Sex: Male vs. Female"]
-inci[coefficient %like% "earliest_hospital_nation", coefficient := 
-  sprintf("Earliest hospital nation: %s vs. England", gsub("earliest_hospital_nation", "", coefficient))]
 inci[coefficient %like% "assessment_centre", coefficient :=
   sprintf("Assessment centre: %s vs. %s", gsub("(assessment_centre)|( \\(.*\\))", "", coefficient),
   levels(pheno$assessment_centre)[1])]
-inci[coefficient %like% "censor_hospital_nation", coefficient := 
-  sprintf("Censor hospital nation: %s vs. England", gsub("censor_hospital_nation", "", coefficient))]
 inci[coefficient %like% "smoking_status", coefficient :=
   sprintf("Smoking status: %s vs. Non-smoker", gsub("smoking_status", "", coefficient))]
 inci[coefficient == "bmi", coefficient := "Body mass index"]
@@ -262,31 +251,22 @@ inci[model == "QDiabetes2018B_fast_gte_8" & coefficient %like% "QDiabetes", coef
 # Write out
 fwrite(inci, sep="\t", quote=FALSE, file="output/UKB_tests/incident_T2D_associations_QDiabetes2018C_subset.txt")
 
-# Compare how PGS add to QDiabetes 2018 model C
-mf <- paste(y, "~ %s + QDiabetes2018C + age + sex +", follow_diff)
-multi_inci <- foreach(this_pgs = names(pgs)[-1], .combine=rbind) %do% {
-  res <- cox.test(sprintf(mf, this_pgs), "incident_type_2_diabetes", pheno)
-  res[, model := this_pgs]
-}
+# Compare how the metaPRS adds to QDiabetes scores
+multi_inci <- rbind(idcol="model_type",
+  "QDiabetes2013 + T2D_metaGRS"=cox.test(paste(y, "~ T2D_metaGRS + QDiabetes2013 + assessment_centre"), "incident_type_2_diabetes", pheno),
+  "QDiabetes2018A + T2D_metaGRS"=cox.test(paste(y, "~ T2D_metaGRS + QDiabetes2018A + assessment_centre"), "incident_type_2_diabetes", pheno),
+  "QDiabetes2018B + T2D_metaGRS"=cox.test(paste(y, "~ T2D_metaGRS + QDiabetes2018B_non_fasting + assessment_centre"), "incident_type_2_diabetes", pheno),
+  "QDiabetes2018C + T2D_metaGRS"=cox.test(paste(y, "~ T2D_metaGRS + QDiabetes2018C + assessment_centre"), "incident_type_2_diabetes", pheno)
+)
+multi_inci[, model := "T2D_metaGRS"]
 
-# And to HbA1c and BMI
-mf <- paste(y, "~ %s + hba1c + bmi + age + sex +", follow_diff)
-multi_inci2 <- foreach(this_pgs = names(pgs)[-1], .combine=rbind) %do% {
-  res <- cox.test(sprintf(mf, this_pgs), "incident_type_2_diabetes", pheno)
-  res[, model := this_pgs]
-}
-
-inci <- rbind(idcol="model_type", "PGS + QDiabetes2018C"=multi_inci, "PGS + BMI + HbA1c"=multi_inci2)
+inci <- rbind(inci, multi_inci)
 
 inci[coefficient == "age", coefficient := "Age"]
 inci[coefficient == "sexMale", coefficient := "Sex: Male vs. Female"]
-inci[coefficient %like% "earliest_hospital_nation", coefficient :=
-  sprintf("Earliest hospital nation: %s vs. England", gsub("earliest_hospital_nation", "", coefficient))]
 inci[coefficient %like% "assessment_centre", coefficient :=
   sprintf("Assessment centre: %s vs. %s", gsub("(assessment_centre)|( \\(.*\\))", "", coefficient),
   levels(pheno$assessment_centre)[1])]
-inci[coefficient %like% "censor_hospital_nation", coefficient :=
-  sprintf("Censor hospital nation: %s vs. England", gsub("censor_hospital_nation", "", coefficient))]
 inci[coefficient %like% "smoking_status", coefficient :=
   sprintf("Smoking status: %s vs. Non-smoker", gsub("smoking_status", "", coefficient))]
 inci[coefficient == "bmi", coefficient := "Body mass index"]

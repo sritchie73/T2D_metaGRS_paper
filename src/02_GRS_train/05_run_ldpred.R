@@ -438,6 +438,10 @@ for (gwas in gwass) {
 	sc <- apply(pgs_auto, 2, sd)
 	keep <- abs(sc - median(sc)) < 3 * mad(sc)
 
+  # Add flag to parameter
+  auto_params[, pass_chain_filter := keep]
+  fwrite(auto_params, sep="\t", quote=FALSE, file=sprintf("%s/ldpred2_auto_parameters.txt", outdir))
+
 	# Average to get best auto pgs
 	if (sum(keep) > 0) {
 		final_auto_pgs <- rowMeans(pgs_auto[, keep])

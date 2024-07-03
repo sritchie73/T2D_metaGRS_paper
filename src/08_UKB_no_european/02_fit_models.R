@@ -2,6 +2,9 @@ library(data.table)
 library(survival)
 library(foreach)
 library(RNOmni)
+library(ggplot2)
+library(hexbin) # required for geom_hex to work
+library(patchwork)
 source("src/functions/glm_test.R")
 source("src/functions/cox_test.R")
 source("src/functions/factor.R") # set reference group (first level) without specifying all levels
@@ -18,38 +21,26 @@ pheno <- pheno[!(first_degree_relative_to_drop)]
 # Remove people in train or test sets
 pheno <- pheno[!(ldpred2_samples) & !(metaGRS_train_samples) & !(metaGRS_test_samples)]
 
-# Define broad ancestry groups
-pheno[, ethnicity_grouping := fcase(
-  ethnicity_subgroup %in% c("African", "Caribbean", "Black or Black British", "Any other Black background"), "African",
-  ethnicity_subgroup %in% c("Bangladeshi", "Indian", "Pakistani"), "South Asian",
-  ethnicity_subgroup %in% c("Chinese", "Asian or Asian British", "Any other Asian background"), "East Asian",
-  ethnicity_subgroup %in% c("White", "British", "Irish", "Any other white background"), "European",
-  ethnicity_subgroup %in% c("Mixed", "White and Asian", "White and Black Caribbean", "White and Black African", "Any other mixed background"), "Mixed",
-  ethnicity_subgroup == "Other ethnic group", "Other",
-  ethnicity_subgroup %in% c("Prefer not to answer", "Do not know"), NA_character_
+# Define major non-European ancestry groups similar to the UKB "White British": based on both
+# self-reported ethnicity and genetic ancestry clustering
+pheno[, ethnicity := fcase(
+  ethnicity_subgroup %in% c("African", "Caribbean", "Black or Black British", "Any other Black background"), "AFR",
+  ethnicity_subgroup %in% c("Bangladeshi", "Indian", "Pakistani"), "SAS",
+  ethnicity_subgroup %in% c("Chinese"), "EAS",
+  default = "NA"
 )]
 
-# Tabulate case/control numbers
-cc <- pheno[,.(N=.N, prev_T2D=sum(type_2_diabetes, na.rm=TRUE), inci_T2D=sum(incident_type_2_diabetes, na.rm=TRUE)),
-            by=.(ethnicity_subgroup, ethnicity_grouping)][order(-N)][order(ethnicity_grouping)]
-fwrite(cc, sep="\t", quote=FALSE, file="output/UKB_tests/UKB_transferrability_case_control_numbers.txt")
+ancestry <- fread("data/Carles_UKB_ancestry/UKB_king_pca_projection__InferredAncestry.txt")
+ancestry <- ancestry[Pr_1st > 0.95]
+pheno[ancestry, on = .(eid=IID), ancestry := Anc_1st]
 
-# Set up information about groupings to test
-test_groups <- rbind(
-  data.table(grouping="African", group_column="ethnicity_grouping"),
-  data.table(grouping="South Asian", group_column="ethnicity_grouping"),
-  data.table(grouping="East Asian", group_column="ethnicity_grouping"),
-  data.table(grouping="OtherAsian", group_column="ethnicity_qdiabetes_groups"),
-  data.table(grouping="Other", group_column="ethnicity_qdiabetes_groups"),
-  data.table(grouping="African", group_column="ethnicity_subgroup"),
-  data.table(grouping="Caribbean", group_column="ethnicity_subgroup"),
-  data.table(grouping="Indian", group_column="ethnicity_subgroup"),
-  data.table(grouping="Pakistani", group_column="ethnicity_subgroup"),
-  data.table(grouping="Bangladeshi", group_column="ethnicity_subgroup"),
-  data.table(grouping="Chinese", group_column="ethnicity_subgroup"),
-  data.table(grouping="Any other Asian background", group_column="ethnicity_subgroup"),
-  data.table(grouping="Other ethnic group", group_column="ethnicity_subgroup")
-)
+pheno <- pheno[ancestry == ethnicity]
+
+# Tabulate case/control numbers
+cc <- pheno[!is.na(type_2_diabetes) & !is.na(earliest_hospital_nation),
+  .(N=.N, prev_T2D=sum(type_2_diabetes, na.rm=TRUE), inci_T2D=sum(incident_type_2_diabetes, na.rm=TRUE)),
+            by=.(ancestry)][order(-N)]
+fwrite(cc, sep="\t", quote=FALSE, file="output/UKB_tests/UKB_transferrability_case_control_numbers.txt")
 
 # Load metaGRS and existing T2D PGS
 pgs <- fread("data/UKB/T2D_PGS/collated_scores.sscore.gz")
@@ -57,6 +48,9 @@ pgs2 <- fread("data/UKB/T2D_PGS_non_European/collated_scores.sscore.gz")
 metaGRS <- fread("data/UKB/T2D_metaGRS_levels.txt")
 pgs <- pgs[pgs2, on = .(IID)]
 pgs <- metaGRS[pgs, on = .(eid=IID)]
+
+# Remove Shim et al. 2023 PGS, whose T2D GWAS summary statistics include non-European UKB participants
+pgs[, Shim2023_PGS003867 := NULL]
 
 # Add to phenotype data
 pheno <- pheno[pgs, on = .(eid), nomatch=0]
@@ -67,16 +61,9 @@ pheno <- pheno[pgs, on = .(eid), nomatch=0]
 pheno[, Ye2021_PGS001357 := -Ye2021_PGS001357]
 
 # Examine prevalent T2D in each test grouping
-prev <- foreach(gIdx = test_groups[,.I], .combine=rbind) %do% {
+prev <- foreach(this_ancestry = unique(pheno$ancestry), .combine=rbind) %do% {
   # Extract samples of interest
-  this_group <- test_groups[gIdx]
-  if (this_group$group_column == "ethnicity_grouping") {
-    dat <- pheno[ethnicity_grouping == this_group$grouping]
-  } else if (this_group$group_column == "ethnicity_qdiabetes_groups") {
-    dat <- pheno[ethnicity_qdiabetes_groups == this_group$grouping]
-  } else if (this_group$group_column == "ethnicity_subgroup") {
-    dat <- pheno[ethnicity_subgroup == this_group$grouping]
-  }
+  dat <- pheno[ancestry == this_ancestry]
 
 	# Drop participants free of T2D at baseline who have withdrawn consent for hospital record
 	# linkage and people with uncertain diabetes status
@@ -89,8 +76,22 @@ prev <- foreach(gIdx = test_groups[,.I], .combine=rbind) %do% {
 	dat[, sex := factor(sex, reference="Female")]
   dat[, assessment_centre := factor(assessment_centre, reference="Leeds")] # For consistency across tests
 
+  # For the HuertaChagoya2023, we need to combine their three scores as they describe at
+  # https://www.pgscatalog.org/score/PGS003443/
+  # https://www.pgscatalog.org/score/PGS003444/
+  # https://www.pgscatalog.org/score/PGS003445/
+  dat[, HuertaChagoya2023_PGS00344X := scale(
+    scale(HuertaChagoya2023_EUR_PGS003443)*0.531117 +
+    scale(HuertaChagoya2023_EAS_PGS003444)*0.5690198 +
+    scale(HuertaChagoya2023_LAT_PGS003445)*0.1465538
+  )]
+  dat[, HuertaChagoya2023_EUR_PGS003443 := NULL]
+  dat[, HuertaChagoya2023_EAS_PGS003444 := NULL]
+  dat[, HuertaChagoya2023_LAT_PGS003445 := NULL]
+
 	# Adjust pgs for 20 PCs
-	for (this_pgs in names(pgs)[-1]) {
+  pgs_list <- c(intersect(names(pgs)[-1], names(dat)), "HuertaChagoya2023_PGS00344X")
+	for (this_pgs in pgs_list) {
 		setnames(dat, this_pgs, "this_pgs")
 		dat[, this_pgs := scale(lm(scale(this_pgs) ~ PC1 + PC2 + PC3 + PC4 + 
 			PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + PC11 + PC12 + PC13 + PC14 + PC15 + 
@@ -104,12 +105,12 @@ prev <- foreach(gIdx = test_groups[,.I], .combine=rbind) %do% {
 	)
 
 	mf <- "type_2_diabetes ~ %s + age + sex"
-	prs <- foreach(this_pgs = names(pgs)[-1], .combine=rbind) %do% {
+	prs <- foreach(this_pgs = pgs_list, .combine=rbind) %do% {
 		res <- glm.test(sprintf(mf, this_pgs), "type_2_diabetes", dat)
 		res[, model := this_pgs]
 	} 
 
-  cbind(this_group, rbind(null, prs))
+  cbind("ancestry"=this_ancestry, rbind(null, prs))
 }
 
 # Rename coefficients for readability
@@ -120,16 +121,9 @@ prev[coefficient == "sexMale", coefficient := "Sex: Male vs. Female"]
 fwrite(prev, sep="\t", quote=FALSE, file="output/UKB_tests/non_european_prevalent_T2D_associations.txt")
 
 # Examine incident T2D in each test grouping
-inci <- foreach(gIdx = test_groups[,.I], .combine=rbind) %do% {
+inci <- foreach(this_ancestry = unique(pheno$ancestry), .combine=rbind) %do% {
   # Extract samples of interest
-  this_group <- test_groups[gIdx]
-  if (this_group$group_column == "ethnicity_grouping") {
-    dat <- pheno[ethnicity_grouping == this_group$grouping]
-  } else if (this_group$group_column == "ethnicity_qdiabetes_groups") {
-    dat <- pheno[ethnicity_qdiabetes_groups == this_group$grouping]
-  } else if (this_group$group_column == "ethnicity_subgroup") {
-    dat <- pheno[ethnicity_subgroup == this_group$grouping]
-  }
+  dat <- pheno[ancestry == this_ancestry]
 
   # Drop participants for whom incident diabetes cannot be fit
 	dat <- dat[!is.na(incident_type_2_diabetes)]
@@ -140,8 +134,22 @@ inci <- foreach(gIdx = test_groups[,.I], .combine=rbind) %do% {
 	dat[, age := scale(age)]
 	dat[, sex := factor(sex, reference="Female")]
 
+  # For the HuertaChagoya2023, we need to combine their three scores as they describe at
+  # https://www.pgscatalog.org/score/PGS003443/
+  # https://www.pgscatalog.org/score/PGS003444/
+  # https://www.pgscatalog.org/score/PGS003445/
+  dat[, HuertaChagoya2023_PGS00344X := scale(
+    scale(HuertaChagoya2023_EUR_PGS003443)*0.531117 +
+    scale(HuertaChagoya2023_EAS_PGS003444)*0.5690198 +
+    scale(HuertaChagoya2023_LAT_PGS003445)*0.1465538
+  )]
+  dat[, HuertaChagoya2023_EUR_PGS003443 := NULL]
+  dat[, HuertaChagoya2023_EAS_PGS003444 := NULL]
+  dat[, HuertaChagoya2023_LAT_PGS003445 := NULL]
+
 	# Adjust pgs for 20 PCs
-	for (this_pgs in names(pgs)[-1]) {
+  pgs_list <- c(intersect(names(pgs)[-1], names(dat)), "HuertaChagoya2023_PGS00344X")
+  for (this_pgs in pgs_list) {
 		setnames(dat, this_pgs, "this_pgs")
 		dat[, this_pgs := scale(lm(scale(this_pgs) ~ PC1 + PC2 + PC3 + PC4 + 
 			PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + PC11 + PC12 + PC13 + PC14 + PC15 + 
@@ -156,12 +164,12 @@ inci <- foreach(gIdx = test_groups[,.I], .combine=rbind) %do% {
 
   # Fit for each PRS
   mf <- "Surv(incident_censor_years, incident_type_2_diabetes) ~ %s + age + sex"
-	prs <- foreach(this_pgs = names(pgs)[-1], .combine=rbind) %do% {
+	prs <- foreach(this_pgs = pgs_list, .combine=rbind) %do% {
 		res <- cox.test(sprintf(mf, this_pgs), "incident_type_2_diabetes", dat)
 		res[, model := this_pgs]
 	}
 
-  cbind(this_group, rbind(null, prs))
+  cbind("ancestry"=this_ancestry, rbind(null, prs))
 }
 
 # Rename coefficients for readability

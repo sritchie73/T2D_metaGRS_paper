@@ -14,10 +14,10 @@ mkdir -p data/T2D_PGS/UKB_valid
   --pgsid PGS001357 --name Ye2021 --out data/T2D_PGS/UKB_valid/Ye2021
 
 ./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
-  --pgsid PGS001781 --name Tamlander2022 --out data/T2D_PGS/UKB_valid/Tamlander2022
+  --pgsid PGS001781 --harmonized GRCh37 --name Tamlander2022 --out data/T2D_PGS/UKB_valid/Tamlander2022
 
 ./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
-  --pgsid PGS002771 --name Mars2022_AJHG --out data/T2D_PGS/UKB_valid/Mars2022_AJHG
+  --pgsid PGS002771 --harmonized GRCh37 --name Mars2022_AJHG --out data/T2D_PGS/UKB_valid/Mars2022_AJHG
 
 ./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
   --pgsid PGS002243 --name Mars2022_CellGenomics --out data/T2D_PGS/UKB_valid/Mars2022_CellGenomics

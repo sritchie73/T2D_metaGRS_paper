@@ -5,7 +5,7 @@
 mkdir -p data/T2D_PGS/UKB_invalid
 
 ./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
-  --pgsid PGS000864 --name Aly2021 --out data/T2D_PGS/UKB_valid/Aly2021
+  --pgsid PGS000864 --name MonsourAly2021 --out data/T2D_PGS/UKB_valid/MonsourAly2021
 
 ./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
   --pgsid PGS000330 --name Mars2020 --out data/T2D_PGS/UKB_invalid/Mars2020
@@ -36,4 +36,17 @@ mkdir -p data/T2D_PGS/UKB_invalid
 
 ./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
   --pgsid PGS002671 --name Weissbrod2022 --out data/T2D_PGS/UKB_invalid/Weissbrod2022
+
+./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
+  --pgsid PGS003867 --name Shim2023 --out data/T2D_PGS/UKB_invalid/Shim2023
+
+# Three PRS that need to be combined in R script downstream:
+./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
+  --pgsid PGS003443 --name HuertaChagoya2023_EUR --out data/T2D_PGS/UKB_invalid/HuertaChagoya2023_EUR
+
+./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
+  --pgsid PGS003444 --name HuertaChagoya2023_EAS --out data/T2D_PGS/UKB_invalid/HuertaChagoya2023_EAS
+
+./src/PGS_resources/download_PGS_from_catalog.sh --nouuid --overwrite \
+  --pgsid PGS003445 --name HuertaChagoya2023_LAT --out data/T2D_PGS/UKB_invalid/HuertaChagoya2023_LAT
 
