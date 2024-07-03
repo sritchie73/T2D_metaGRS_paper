@@ -16,5 +16,6 @@ done
   --keep-ambiguous \
   --out data/UKB/T2D_PGS_non_European/ \
   --work data/UKB/T2D_PGS_non_European/ \
+  --partition icelake \
   --time 8:0:0 \
   --single-out collated_scores

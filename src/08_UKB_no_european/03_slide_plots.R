@@ -10,8 +10,8 @@ prev <- fread("output/UKB_tests/non_european_prevalent_T2D_associations.txt")
 inci <- fread("output/UKB_tests/non_european_incident_T2D_associations.txt")
 
 # Get null model associations
-prev_null <- prev[model == "age + sex", .SD[1], by=.(grouping, group_column)]
-inci_null <- inci[model == "age + sex", .SD[1], by=.(grouping, group_column)]
+prev_null <- prev[model == "age + sex", .SD[1], by=.(ancestry)]
+inci_null <- inci[model == "age + sex", .SD[1], by=.(ancestry)]
 
 # Extract PGS associations and modle fit
 prev_pgs <- prev[coefficient %like% "PGS" | coefficient %like% "GRS"]
@@ -19,13 +19,13 @@ inci_pgs <- inci[coefficient %like% "PGS" | coefficient %like% "GRS"]
 
 # Order:
 prev_pgs <- prev_pgs[order(-AUC)]
-prev_pgs[, AUC_rank := 1:.N, by=.(grouping, group_column)]
+prev_pgs[, AUC_rank := 1:.N, by=ancestry]
 pgs_rank <- prev_pgs[,.(ranksum=sum(AUC_rank)),by=.(coefficient)]
 prev_pgs <- prev_pgs[pgs_rank[order(ranksum), .(coefficient)], on = .(coefficient)]
 prev_pgs[, coefficient := factor(coefficient, levels=unique(coefficient))]
 
 inci_pgs <- inci_pgs[order(-C.index)]
-inci_pgs[, Cindex_rank := 1:.N, by=.(grouping, group_column)]
+inci_pgs[, Cindex_rank := 1:.N, by=ancestry]
 pgs_rank <- inci_pgs[,.(ranksum=sum(Cindex_rank)),by=.(coefficient)]
 inci_pgs <- inci_pgs[pgs_rank[order(ranksum), .(coefficient)], on = .(coefficient)]
 inci_pgs[, coefficient := factor(coefficient, levels=unique(coefficient))]
@@ -53,7 +53,7 @@ g_auc <- ggplot(prev_pgs) +
   scale_color_manual(values=c("current"="#ae017e", "previous"="#000000", "no"="#045a8d")) +
   xlab("") +
   ylab("AUC (95% CI)") +
-  facet_wrap(~ group_column + grouping, scales="free_y", nrow=2) +
+  facet_wrap(~ ancestry, scales="free_y", nrow=2) +
   theme_bw() +
   theme(
     legend.position="none",
@@ -74,7 +74,7 @@ g_or <- ggplot(prev_pgs) +
   scale_color_manual(values=c("current"="#ae017e", "previous"="#000000", "no"="#045a8d")) +
   xlab("") +
   ylab("Odds Ratio (95% CI)") +
-  facet_wrap(~ group_column + grouping, scales="free_y", nrow=2) +
+  facet_wrap(~ ancestry, scales="free_y", nrow=2) +
   theme_bw() +
   theme(
     legend.position="none",
@@ -98,7 +98,7 @@ g_cind <- ggplot(inci_pgs) +
   scale_color_manual(values=c("current"="#ae017e", "previous"="#000000", "no"="#045a8d")) +
   xlab("") +
   ylab("C-index (95% CI)") +
-  facet_wrap(~ group_column + grouping, scales="free_y", nrow=2) +
+  facet_wrap(~ ancestry, scales="free_y", nrow=2) +
   theme_bw() +
   theme(
     legend.position="none",
@@ -119,7 +119,7 @@ g_hr <- ggplot(inci_pgs) +
   scale_color_manual(values=c("current"="#ae017e", "previous"="#000000", "no"="#045a8d")) +
   xlab("") +
   ylab("Hazard Ratio (95% CI)") +
-  facet_wrap(~ group_column + grouping, scales="free_y", nrow=2) +
+  facet_wrap(~ ancestry, scales="free_y", nrow=2) +
   theme_bw() +
   theme(
     legend.position="none",
@@ -149,73 +149,18 @@ inci_pgs[, metaGRS := NULL]
 prev_wb <- fread("output/UKB_tests/prevalent_T2D_associations.txt")
 prev_wb <- prev_wb[coefficient == "T2D_metaGRS"]
 prev_wb[, model_type := NULL]
-prev_wb[, grouping := "White British"]
-prev_wb[, group_column := "metaGRS_test_set"]
+prev_wb[, ancestry := "EUR"]
 prev_pgs <- rbind(prev_pgs, prev_wb)
 
 inci_wb <- fread("output/UKB_tests/incident_T2D_associations.txt")
 inci_wb <- inci_wb[coefficient == "T2D_metaGRS"]
 inci_wb[, model_type := NULL]
-inci_wb[, grouping := "White British"]
-inci_wb[, group_column := "metaGRS_test_set"]
+inci_wb[, ancestry := "EUR"]
 inci_pgs <- rbind(inci_pgs, inci_wb)
-
-# Relabel so axes are unique
-prev_pgs[, xlabel := fcase(
-	grouping == "White British" & group_column == "metaGRS_test_set", "White British (test set)",
-	grouping == "South Asian" & group_column == "ethnicity_grouping", "South Asian (supergroup)",
-	grouping == "Indian" & group_column == "ethnicity_subgroup", "Indian",
-	grouping == "Bangladeshi" & group_column == "ethnicity_subgroup", "Bangladeshi",
-	grouping == "Pakistani" & group_column == "ethnicity_subgroup", "Pakistani",
-	grouping == "East Asian" & group_column == "ethnicity_grouping", "East Asian (supergroup)",
-	grouping == "Chinese" & group_column == "ethnicity_subgroup",  "Chinese",
-	grouping == "Any other Asian background" & group_column == "ethnicity_subgroup", "Any other Asian background",
-	grouping == "African" & group_column == "ethnicity_grouping", "African (supergroup)",
-	grouping == "African" & group_column == "ethnicity_subgroup", "African",
-	grouping == "Caribbean" & group_column == "ethnicity_subgroup", "Caribbean",
-	grouping == "Other ethnic group" & group_column == "ethnicity_subgroup", "Other ethnic group",
-	grouping == "Other" & group_column == "ethnicity_qdiabetes_groups", "Other (QDiabetes supergroup)",
-	grouping == "OtherAsian" & group_column == "ethnicity_qdiabetes_groups", "Other Asian (QDiabetes supergroup)"
-)]
-prev_pgs[, xlabel := factor(xlabel, levels=c(
-	"White British (test set)",
-  "South Asian (supergroup)", "Indian", "Bangladeshi", "Pakistani",
-  "East Asian (supergroup)", "Chinese", "Any other Asian background",
-  "African (supergroup)", "African", "Caribbean",
-  "Other ethnic group",
-  "Other (QDiabetes supergroup)",
-  "Other Asian (QDiabetes supergroup)"
-))]
-
-inci_pgs[, xlabel := fcase(
-	grouping == "White British" & group_column == "metaGRS_test_set", "White British (test set)",
-	grouping == "South Asian" & group_column == "ethnicity_grouping", "South Asian (supergroup)",
-	grouping == "Indian" & group_column == "ethnicity_subgroup", "Indian",
-	grouping == "Bangladeshi" & group_column == "ethnicity_subgroup", "Bangladeshi",
-	grouping == "Pakistani" & group_column == "ethnicity_subgroup", "Pakistani",
-	grouping == "East Asian" & group_column == "ethnicity_grouping", "East Asian (supergroup)",
-	grouping == "Chinese" & group_column == "ethnicity_subgroup",  "Chinese",
-	grouping == "Any other Asian background" & group_column == "ethnicity_subgroup", "Any other Asian background",
-	grouping == "African" & group_column == "ethnicity_grouping", "African (supergroup)",
-	grouping == "African" & group_column == "ethnicity_subgroup", "African",
-	grouping == "Caribbean" & group_column == "ethnicity_subgroup", "Caribbean",
-	grouping == "Other ethnic group" & group_column == "ethnicity_subgroup", "Other ethnic group",
-	grouping == "Other" & group_column == "ethnicity_qdiabetes_groups", "Other (QDiabetes supergroup)",
-	grouping == "OtherAsian" & group_column == "ethnicity_qdiabetes_groups", "Other Asian (QDiabetes supergroup)"
-)]
-inci_pgs[, xlabel := factor(xlabel, levels=c(
-	"White British (test set)",
-  "South Asian (supergroup)", "Indian", "Bangladeshi", "Pakistani",
-  "East Asian (supergroup)", "Chinese", "Any other Asian background",
-  "African (supergroup)", "African", "Caribbean",
-  "Other ethnic group",
-  "Other (QDiabetes supergroup)",
-  "Other Asian (QDiabetes supergroup)"
-))]
 
 # Build plots
 g_or <- ggplot(prev_pgs) +
-  aes(y=OR, ymin=OR.L95, ymax=OR.U95, x=xlabel) +
+  aes(y=OR, ymin=OR.L95, ymax=OR.U95, x=ancestry) +
   geom_hline(yintercept=1, linetype=2) +
   geom_errorbar(width=0, alpha=0.8, color="#ae017e") +
   geom_point(shape=19, color="#ae017e") +
@@ -232,7 +177,7 @@ g_or <- ggplot(prev_pgs) +
   )
 
 g_hr <- ggplot(inci_pgs) +
-  aes(y=HR, ymin=L95, ymax=U95, x=xlabel) +
+  aes(y=HR, ymin=L95, ymax=U95, x=ancestry) +
   geom_hline(yintercept=1, linetype=2) +
   geom_errorbar(width=0, alpha=0.8, color="#ae017e") +
   geom_point(shape=19, color="#ae017e") +

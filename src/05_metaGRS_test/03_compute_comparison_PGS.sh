@@ -16,5 +16,7 @@ done
 	--keep-ambiguous \
   --out data/UKB/T2D_PGS/ \
 	--work data/UKB/T2D_PGS/ \
+  --partition icelake \
+  --account INOUYE-SL2-CPU \
 	--time 8:0:0 \
 	--single-out collated_scores
