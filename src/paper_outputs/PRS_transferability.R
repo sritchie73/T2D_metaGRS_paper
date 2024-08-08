@@ -52,7 +52,7 @@ gg_prev_ukb_SAS <- ggplot(prev_ukb_SAS[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Odds Ratio (95% CI)") +
+  scale_x_continuous("Odds Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of T2D prevalence in UK Biobank", subtitle="N=6,992; 1,253 prevalent T2D cases") +
   theme_prs()
 
@@ -62,7 +62,7 @@ gg_prev_ukb_AFR <- ggplot(prev_ukb_AFR[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Odds Ratio (95% CI)") +
+  scale_x_continuous("Odds Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of T2D prevalence in UK Biobank", subtitle="N=6,871; 766 prevalent T2D cases") +
   theme_prs()
 
@@ -72,7 +72,7 @@ gg_prev_ukb_EAS <- ggplot(prev_ukb_EAS[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Odds Ratio (95% CI)") +
+  scale_x_continuous("Odds Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of T2D prevalence in UK Biobank", subtitle="N=1,432; 76 prevalent T2D cases") +
   theme_prs()
 
@@ -108,7 +108,7 @@ gg_inci_ukb_SAS <- ggplot(inci_ukb_SAS[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Hazard Ratio (95% CI)") +
+  scale_x_continuous("Hazard Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of incident T2D risk in UK Biobank", subtitle="N=5,685; 513 T2D cases within 10 years of follow-up") +
   theme_prs()
 
@@ -118,7 +118,7 @@ gg_inci_ukb_AFR <- ggplot(inci_ukb_AFR[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Hazard Ratio (95% CI)") +
+  scale_x_continuous("Hazard Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of incident T2D risk in UK Biobank", subtitle="N=6,019; 395 T2D cases within 10 years of follow-up") +
   theme_prs()
 
@@ -128,7 +128,7 @@ gg_inci_ukb_EAS <- ggplot(inci_ukb_EAS[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Hazard Ratio (95% CI)") +
+  scale_x_continuous("Hazard Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of incident T2D risk in UK Biobank", subtitle="N=1,350; 37 T2D cases within 10 years of follow-up") +
   theme_prs()
 
@@ -169,7 +169,7 @@ gg_prev_aou_AMR <- ggplot(prev_aou_AMR[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Odds Ratio (95% CI)") +
+  scale_x_continuous("Odds Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of T2D prevalence in All of Us", subtitle="N=33,652; 4,033 prevalent T2D cases") +
   theme_prs()
 
@@ -179,7 +179,7 @@ gg_prev_aou_AFR <- ggplot(prev_aou_AFR[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Odds Ratio (95% CI)") +
+  scale_x_continuous("Odds Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of T2D prevalence in All of Us", subtitle="N=44,364; 5,663 prevalent T2D cases") +
   theme_prs()
 
@@ -201,7 +201,7 @@ inci_mec[PRS == "Aly2021_PGS000864", PRS := "MonsourAly2021_PGS000864"]
 # Correct sign of Ye2021 PRS
 inci_mec[PRS == "Ye2021_PGS001357", 
   c("logOR", "logOR.L95", "logOR.U95", "OR", "OR.L95", "OR.U95", "Z.score") := 
-  .(-logOR, -logOR.L95, -logOR.U95, exp(-logOR), exp(-logOR.L95), exp(-logOR.U95), -Z.score)
+  .(-logOR, -logOR.L95, -logOR.U95, exp(-logOR), exp(-logOR.U95), exp(-logOR.L95), -Z.score)
 ]
 
 # Define and extract ancestry groups
@@ -231,7 +231,7 @@ gg_inci_mec_SAS <- ggplot(inci_mec_SAS[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Odds Ratio (95% CI)") +
+  scale_x_continuous("Odds Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of incident T2D risk in MEC", subtitle="N=852; 194 T2D cases within 7 years of follow-up") +
   theme_prs()
 
@@ -241,7 +241,7 @@ gg_inci_mec_EAS <- ggplot(inci_mec_EAS[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Odds Ratio (95% CI)") +
+  scale_x_continuous("Odds Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of incident T2D risk in MEC", subtitle="N=1,149; 205 T2D cases within 7 years of follow-up") +
   theme_prs()
 
@@ -251,7 +251,7 @@ gg_inci_mec_ASN <- ggplot(inci_mec_ASN[1:6]) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Odds Ratio (95% CI)") +
+  scale_x_continuous("Odds Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of incident T2D risk in MEC", subtitle="N=870; 187 T2D cases within 7 years of follow-up") +
   theme_prs()
 
@@ -365,9 +365,6 @@ g <- ggplot(ggdt) +
     legend.margin=margin(0,0,0,0), legend.title=element_text(size=8)
   )
 ggsave(g, width=7.2, height=4, file="output/paper_outputs/figures/PRS_transferrability_within_cohort_ranking.pdf")
-
-
-
 
 # create tables
 inci_mec[, ancestry := fcase(

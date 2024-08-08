@@ -55,7 +55,7 @@ g <- ggplot(cinds) +
     legend.position="none"
   )
 
-ggsave(g, width=7.2, height=4, file="output/paper_outputs/figures/risk_factor_comparison.pdf")
+ggsave(g, width=3.6, height=4, file="output/paper_outputs/figures/risk_factor_comparison.pdf")
 
 # Curate supplementary table
 dt <- rbind(
@@ -99,9 +99,4 @@ fwrite(dt, sep="\t", quote=FALSE, file="output/paper_outputs/tables/risk_factor_
 # Write out delta-C index
 delta_C <- fread("output/UKB_tests/delta_cind_bootstraps.txt")
 fwrite(delta_C, sep="\t", quote=FALSE, file="output/paper_outputs/tables/qdiabetes_deltaC_boot.txt")
-
-
-
-
-
 
