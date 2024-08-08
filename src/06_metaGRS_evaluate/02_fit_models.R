@@ -6,7 +6,6 @@ source("src/functions/glm_test.R")
 source("src/functions/cox_test.R")
 source("src/functions/factor.R") # set reference group (first level) without specifying all levels
 source("src/functions/factor_by_size.R") # set reference group (first level) as largest group
-source("src/functions/logit.R") # like log transform, but for percentages
 
 # Make output directory
 system("mkdir -p output/UKB_tests", wait=TRUE)
@@ -37,6 +36,16 @@ for (this_pgs in names(pgs)[-1]) {
 # sign.
 pheno[, Ye2021_PGS001357 := -Ye2021_PGS001357]
 
+# add in age tertiles for later QDiabetes stratification analysis
+pheno[!is.na(QDiabetes2018C), age_tertile := cut(age, breaks=quantile(age, probs=seq(0, 1, length=4)), include.lowest=TRUE)]
+
+# Replace QDiabetes absolute risks with linear predictors
+pheno[,c("QDiabetes2018A", "QDiabetes2018B_non_fasting", "QDiabetes2018C") := NULL]
+lps <- fread("output/UKB_tests/QDiabetes_plus_metaPRS_linear_predictors.txt")
+pheno[lps, on = .(eid), QDiabetes2018A := QDiabA_LP]
+pheno[lps, on = .(eid), QDiabetes2018B_non_fasting := QDiabB_LP]
+pheno[lps, on = .(eid), QDiabetes2018C := QDiabC_LP]
+
 # Process risk factors and covariates prior to modelling - we want all
 # estimates to be per SD change in variable, and for factors, using the
 # largest group or lowest risk as reference 
@@ -57,18 +66,14 @@ pheno[, systematic_corticosteroids := factor(systematic_corticosteroids, referen
 pheno[, atypical_antipsychotics := factor(atypical_antipsychotics, reference=FALSE)]
 pheno[, hba1c := scale(log(hba1c))]
 pheno[, non_fasting_glucose := scale(log(non_fasting_glucose))]
-pheno[, fasting_glucose := scale(log(fasting_glucose))]
-pheno[, QDiabetes2013 := scale(logit(QDiabetes2013/100))]
-pheno[, QDiabetes2018A := scale(logit(QDiabetes2018A/100))]
-pheno[, QDiabetes2018B_fasting := scale(logit(QDiabetes2018B_fasting/100))]
-pheno[, QDiabetes2018B_non_fasting := scale(logit(QDiabetes2018B_non_fasting/100))]
-pheno[, QDiabetes2018C := scale(logit(QDiabetes2018C/100))]
+pheno[, QDiabetes2018A := scale(QDiabetes2018A)]
+pheno[, QDiabetes2018B_non_fasting := scale(QDiabetes2018B_non_fasting)]
+pheno[, QDiabetes2018C := scale(QDiabetes2018C)]
 pheno[, assessment_centre := factor_by_size(assessment_centre)]
 
 # Drop participants free of T2D at baseline who have withdrawn consent for hospital record
 # linkage and people with uncertain diabetes status
 pheno <- pheno[!is.na(type_2_diabetes) & !is.na(earliest_hospital_date)]
-stop()
 
 # First examine prevalent T2D
 prev <- rbind(idcol="model",
@@ -118,8 +123,7 @@ inci <- rbind(idcol="model",
 # consistently gives better C-index, so will use that going forward
 rf <- c("bmi", "smoking_status", "townsend", "family_history_diabetes", "history_cvd", "history_gestational_diabetes", 
         "history_pcos", "history_learning_difficulties", "history_bipolar_schizophrenia", "hypertension_medication", 
-        "lipid_lowering_medication", "systematic_corticosteroids", "atypical_antipsychotics", "hba1c", "fasting_glucose", 
-        "non_fasting_glucose")
+        "lipid_lowering_medication", "systematic_corticosteroids", "atypical_antipsychotics", "hba1c", "non_fasting_glucose")
 mf <- paste(y, "~ %s + age + sex + assessment_centre")
 rf_inci <- foreach(this_rf = rf, .combine=rbind) %do% {
   res <- cox.test(sprintf(mf, this_rf), "incident_type_2_diabetes", pheno)
@@ -131,19 +135,12 @@ pgs_inci <- foreach(this_pgs = names(pgs)[-1], .combine=rbind) %do% {
   res[, model := this_pgs]
 }
 
-qdiab <- c("QDiabetes2018A", "QDiabetes2018B_fasting", "QDiabetes2018B_non_fasting", "QDiabetes2018C", "QDiabetes2013")
+qdiab <- c("QDiabetes2018A", "QDiabetes2018B_non_fasting", "QDiabetes2018C")
 mf2 <- paste(y, "~ %s + assessment_centre") # no need to adjust for age and sex, these are incorporated into QDiabetes
 qd_inci <- foreach(this_rs = qdiab, .combine=rbind) %do% {
   res <- cox.test(sprintf(mf2, this_rs), "incident_type_2_diabetes", pheno)
   res[, model := this_rs]
 }
-
-qd_inci2 <- rbind(idcol = "model",
-  "QDiabetes2018B_fast_gte_3"=cox.test(sprintf(mf2, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 3]),
-  "QDiabetes2018B_fast_gte_8"=cox.test(sprintf("%s ~ %s + assessment_centre", y, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 8])
-)
-qd_inci <- rbind(qd_inci, qd_inci2)
-
 
 inci <- rbind(idcol="model_type", "reference"=inci, "risk factor"=rf_inci, "QDiabetes"=qd_inci, "PGS"=pgs_inci)
 
@@ -159,9 +156,7 @@ inci[coefficient == "bmi", coefficient := "Body mass index"]
 inci[coefficient == "townsend", coefficient := "Townsend deprivation index"]
 inci[coefficient %like% "QDiabetes", coefficient := gsub("QDiabetes", "QDiabetes ", coefficient)]
 inci[coefficient %like% "QDiabetes", coefficient := gsub("2018", "2018 model ", coefficient)]
-inci[coefficient %like% "QDiabetes", coefficient := gsub("B_fasting", "B (fasting glucose)", coefficient)]
 inci[coefficient %like% "QDiabetes", coefficient := gsub("B_non_fasting", "B (non-fasting glucose)", coefficient)]
-inci[coefficient == "fasting_glucose", coefficient := "Glucose (fasting)"]
 inci[coefficient == "non_fasting_glucose", coefficient := "Glucose (non-fasting)"]
 inci[coefficient == "hba1c", coefficient := "Glycated haemoglobin (HbA1c)"]
 inci[coefficient == "family_history_diabetesTRUE", coefficient := "Family history of diabetes"]
@@ -174,8 +169,6 @@ inci[coefficient == "hypertension_medicationTRUE", coefficient := "Taking hypert
 inci[coefficient == "lipid_lowering_medicationTRUE", coefficient := "Taking lipid lowering medication"]
 inci[coefficient == "systematic_corticosteroidsTRUE", coefficient := "Taking systematic corticosteroids"]
 inci[coefficient == "atypical_antipsychoticsTRUE", coefficient := "Taking 2nd generation atypical antipsychotics"]
-inci[model == "QDiabetes2018B_fast_gte_3" & coefficient %like% "QDiabetes", coefficient := "QDiabetes 2018 model B (fasting ≥ 3hours)"]
-inci[model == "QDiabetes2018B_fast_gte_8" & coefficient %like% "QDiabetes", coefficient := "QDiabetes 2018 model B (fasting ≥ 8hours)"]
 
 # Write out
 fwrite(inci, sep="\t", quote=FALSE, file="output/UKB_tests/incident_T2D_associations.txt")
@@ -206,12 +199,6 @@ qd_inci <- foreach(this_rs = qdiab, .combine=rbind) %do% {
   res[, model := this_rs]
 }
 
-qd_inci2 <- rbind(idcol = "model",
-  "QDiabetes2018B_fast_gte_3"=cox.test(sprintf(mf2, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 3]),
-  "QDiabetes2018B_fast_gte_8"=cox.test(sprintf("%s ~ %s + assessment_centre", y, "QDiabetes2018B_non_fasting"), "incident_type_2_diabetes", pheno[fasting_time >= 8])
-)
-qd_inci <- rbind(qd_inci, qd_inci2)
-
 pgs_inci <- foreach(this_pgs = names(pgs)[-1], .combine=rbind) %do% {
   res <- cox.test(sprintf(mf, this_pgs), "incident_type_2_diabetes", pheno)
   res[, model := this_pgs]
@@ -230,9 +217,7 @@ inci[coefficient == "bmi", coefficient := "Body mass index"]
 inci[coefficient == "townsend", coefficient := "Townsend deprivation index"]
 inci[coefficient %like% "QDiabetes", coefficient := gsub("QDiabetes", "QDiabetes ", coefficient)]
 inci[coefficient %like% "QDiabetes", coefficient := gsub("2018", "2018 model ", coefficient)]
-inci[coefficient %like% "QDiabetes", coefficient := gsub("B_fasting", "B (fasting glucose)", coefficient)]
 inci[coefficient %like% "QDiabetes", coefficient := gsub("B_non_fasting", "B (non-fasting glucose)", coefficient)]
-inci[coefficient == "fasting_glucose", coefficient := "Glucose (fasting)"]
 inci[coefficient == "non_fasting_glucose", coefficient := "Glucose (non-fasting)"]
 inci[coefficient == "hba1c", coefficient := "Glycated haemoglobin (HbA1c)"]
 inci[coefficient == "family_history_diabetesTRUE", coefficient := "Family history of diabetes"]
@@ -245,15 +230,12 @@ inci[coefficient == "hypertension_medicationTRUE", coefficient := "Taking hypert
 inci[coefficient == "lipid_lowering_medicationTRUE", coefficient := "Taking lipid lowering medication"]
 inci[coefficient == "systematic_corticosteroidsTRUE", coefficient := "Taking systematic corticosteroids"]
 inci[coefficient == "atypical_antipsychoticsTRUE", coefficient := "Taking 2nd generation atypical antipsychotics"]
-inci[model == "QDiabetes2018B_fast_gte_3" & coefficient %like% "QDiabetes", coefficient := "QDiabetes 2018 model B (fasting ≥ 3hours)"]
-inci[model == "QDiabetes2018B_fast_gte_8" & coefficient %like% "QDiabetes", coefficient := "QDiabetes 2018 model B (fasting ≥ 8hours)"]
 
 # Write out
 fwrite(inci, sep="\t", quote=FALSE, file="output/UKB_tests/incident_T2D_associations_QDiabetes2018C_subset.txt")
 
 # Compare how the metaPRS adds to QDiabetes scores
 multi_inci <- rbind(idcol="model_type",
-  "QDiabetes2013 + T2D_metaGRS"=cox.test(paste(y, "~ T2D_metaGRS + QDiabetes2013 + assessment_centre"), "incident_type_2_diabetes", pheno),
   "QDiabetes2018A + T2D_metaGRS"=cox.test(paste(y, "~ T2D_metaGRS + QDiabetes2018A + assessment_centre"), "incident_type_2_diabetes", pheno),
   "QDiabetes2018B + T2D_metaGRS"=cox.test(paste(y, "~ T2D_metaGRS + QDiabetes2018B_non_fasting + assessment_centre"), "incident_type_2_diabetes", pheno),
   "QDiabetes2018C + T2D_metaGRS"=cox.test(paste(y, "~ T2D_metaGRS + QDiabetes2018C + assessment_centre"), "incident_type_2_diabetes", pheno)
@@ -275,4 +257,31 @@ inci[coefficient %like% "QDiabetes", coefficient := gsub("2018", "2018 model ", 
 inci[coefficient == "hba1c", coefficient := "Glycated haemoglobin (HbA1c)"]
 
 fwrite(inci, sep="\t", quote=FALSE, file="output/UKB_tests/incident_T2D_multivariate_associations.txt")
+
+# Compare how the metaPRS adds to the QDiabetes scores across age tertiles
+y <- "Surv(incident_censor_years, incident_type_2_diabetes)"
+age_inci <- foreach(idx = unique(pheno$age_tertile), .combine=rbind) %do% {
+  this_pheno <- pheno[age_tertile == idx]
+  res <- rbind(idcol="model_type",
+    "T2D_metaGRS (QDiabetes 2018A subcohort)"=cox.test(paste(y, "~ scale(T2D_metaGRS) + scale(age) + factor(sex)"), "incident_type_2_diabetes", this_pheno[!is.na(QDiabetes2018A)]),
+    "T2D_metaGRS (QDiabetes 2018B subcohort)"=cox.test(paste(y, "~ scale(T2D_metaGRS) + scale(age) + factor(sex)"), "incident_type_2_diabetes", this_pheno[!is.na(QDiabetes2018B_non_fasting)]),
+    "T2D_metaGRS (QDiabetes 2018C subcohort)"=cox.test(paste(y, "~ scale(T2D_metaGRS) + scale(age) + factor(sex)"), "incident_type_2_diabetes", this_pheno[!is.na(QDiabetes2018C)]),
+    "QDiabetes2018A"=cox.test(paste(y, "~ scale(QDiabetes2018A)"), "incident_type_2_diabetes", this_pheno),
+    "QDiabetes2018A + T2D_metaGRS"=cox.test(paste(y, "~ scale(T2D_metaGRS) + scale(QDiabetes2018A)"), "incident_type_2_diabetes", this_pheno),
+    "QDiabetes2018B"=cox.test(paste(y, "~ scale(QDiabetes2018B_non_fasting)"), "incident_type_2_diabetes", this_pheno),
+    "QDiabetes2018B + T2D_metaGRS"=cox.test(paste(y, "~ scale(T2D_metaGRS) + scale(QDiabetes2018B_non_fasting)"), "incident_type_2_diabetes", this_pheno),
+    "QDiabetes2018C"=cox.test(paste(y, "~ scale(QDiabetes2018C)"), "incident_type_2_diabetes", this_pheno),
+    "QDiabetes2018C + T2D_metaGRS"=cox.test(paste(y, "~ scale(T2D_metaGRS) + scale(QDiabetes2018C)"), "incident_type_2_diabetes", this_pheno)
+  )
+  cbind(age_tertile=idx, res)
+}
+
+age_inci[coefficient == "age", coefficient := "Age"]
+age_inci[coefficient == "factor(sexMale)", coefficient := "Sex: Male vs. Female"]
+age_inci[, coefficient := gsub("\\)", "", gsub("scale\\(", "", coefficient))]
+age_inci[coefficient %like% "QDiabetes", coefficient := gsub("QDiabetes", "QDiabetes ", coefficient)]
+age_inci[coefficient %like% "QDiabetes", coefficient := gsub("2018", "2018 model ", coefficient)]
+age_inci[, coefficient := gsub("_non_fasting", "", coefficient)]
+
+fwrite(age_inci, sep="\t", quote=FALSE, file="output/UKB_tests/QDiabetes_comparison_by_age_tertile.txt")
 

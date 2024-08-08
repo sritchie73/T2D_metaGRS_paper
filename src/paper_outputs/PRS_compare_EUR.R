@@ -31,7 +31,7 @@ g1 <- ggplot(prev_ukb) +
   geom_point(shape=23, fill="white") + 
   geom_errorbarh(height=0) +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Odds Ratio (95% CI)") +
+  scale_x_continuous("Odds Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of T2D prevalence in UK Biobank", subtitle="N=245,177; 11,080 prevalent T2D cases") +
   theme_prs()
 
@@ -49,7 +49,7 @@ g2 <- ggplot(inci_ukb) +
   geom_point(shape=23, fill="white") + 
   geom_errorbarh(height=0) +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Hazard Ratio (95% CI)") +
+  scale_x_continuous("Hazard Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of incident T2D risk in UK Biobank", subtitle="N=232,808; 6,016 T2D cases within 10 years of follow-up") +
   theme_prs()
 
@@ -66,7 +66,7 @@ g3 <- ggplot(inci_interval) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") + 
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Hazard Ratio (95% CI)") +
+  scale_x_continuous("Hazard Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of incident T2D risk in INTERVAL", subtitle="N=38,941; 726 T2D cases within 11 years of follow-up") +
   theme_prs()
 
@@ -92,7 +92,7 @@ g4 <- ggplot(cc_aou) +
   geom_errorbarh(height=0) +
   geom_point(shape=23, fill="white") +
   scale_color_manual(values=c("TRUE"="#bd0026", "FALSE"="#08306b")) +
-  xlab("Odds Ratio (95% CI)") +
+  scale_x_continuous("Odds Ratio (95% CI)", limits=c(1, 2.5), breaks=c(1,1.5,2,2.5)) +
   ggtitle("Prediction of T2D prevalence in All of Us", subtitle="N=109,021; 10,069 prevalent T2D cases") +
   theme_prs()
 
