@@ -3,10 +3,8 @@ variables, curate them, and derive new variables (e.g. QDiabetes risk scores).
 
 The reason these are separate is that each of the symlinked folders is its own self-contained "project" - i.e. with its
 own set of (git-tracked) source files, data directories (again with symbolic links to raw UK biobank data, or other 
-curated UK Biobank datasets). This is so they can be re-used across multiple projects, e.g. symlinked under a data 
-
-Any calls to 'ukbconv' or other similar tools stored in a src/ukbtools/ folder (or folder
-folder as I have done here.
+curated UK Biobank datasets). This is so they can be re-used across multiple projects, e.g. symlinked under a data folder
+a I have done here.
 
 Folders tracked here:
 ----------------------
