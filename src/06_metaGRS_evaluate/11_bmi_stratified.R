@@ -83,10 +83,6 @@ prs_prev <- foreach(this_strata = c("low", "high"), .combine=rbind) %do% {
 prs_prev[coefficient == "age", coefficient := "Age"]
 prs_prev[coefficient == "sexMale", coefficient := "Sex: Male vs. Female"]
 
-
-
-
-
 # Now repeat the process for incident T2D
 
 # 1. Get sex-specific BMI cut-points in T2D cases
@@ -139,10 +135,3 @@ prs_inci <- foreach(this_strata = c("low", "high"), .combine=rbind) %do% {
 # Rename coefficients for readability
 prs_inci[coefficient == "age", coefficient := "Age"]
 prs_inci[coefficient == "sexMale", coefficient := "Sex: Male vs. Female"]
-
-
-
-
-
-
-
