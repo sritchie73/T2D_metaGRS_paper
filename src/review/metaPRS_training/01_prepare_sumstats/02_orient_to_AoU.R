@@ -1,6 +1,7 @@
 library(data.table)
 library(foreach)
 source("src/functions/flip_strand.R")
+source("src/functions/eaf_to_maf.R")
 
 # Load candidate variant set
 varset <- fread("data/filtered_sumstats/candidate_varset.txt")
@@ -45,9 +46,47 @@ varset[!(oriented),
 # Add in SNP ID from All of Us
 varset[aou, on = .(chr, pos_b38=pos, effect_allele=alt, other_allele=ref), AoU_varID := varid]
 
+# Add in allele frequencies from ACAF callset
+aou_af <- fread("data/All_of_Us/candidate_varset_AF.txt.gz")
+aou_af[,AoU_varID := paste0("chr", gsub("-", ":", vid))]
+varset[aou_af, on = .(AoU_varID), 
+  c("rsid_AoU", "AoU_varID2", "EUR_EAF_AoU", "AFR_EAF_AoU", "AMR_EAF_AoU", "EAS_EAF_AoU", "SAS_EAF_AoU", "MID_EAF_AoU", "OTH_EAF_AoU") :=
+  .(dbsnp_rsid, vid, gvs_eur_af, gvs_afr_af, gvs_amr_af, gvs_eas_af, gvs_sas_af, gvs_mid_af, gvs_oth_af)]
+
+# SNPs with allele counts < 20 have their frequency set to NA for that ancestry in All of Us. To simplify filtering, set these to 0 in our
+# varset table
+varset[is.na(EUR_EAF_AoU), EUR_EAF_AoU := 0]
+varset[is.na(AFR_EAF_AoU), AFR_EAF_AoU := 0]
+varset[is.na(AMR_EAF_AoU), AMR_EAF_AoU := 0]
+varset[is.na(EAS_EAF_AoU), EAS_EAF_AoU := 0]
+varset[is.na(SAS_EAF_AoU), SAS_EAF_AoU := 0]
+varset[is.na(MID_EAF_AoU), MID_EAF_AoU := 0]
+varset[is.na(OTH_EAF_AoU), OTH_EAF_AoU := 0]
+
+# Filter to variants that have >1% frequency in the EUR, AFR, or AMR populations in All of Us - this filter is applied later on by the
+# per-ancestry LDpred2 quality control when calculating the LD matrix (assuming 10K samples)
+varset <- varset[
+  maf(EUR_EAF_AoU) >= 0.01 |   # 1,295,106 SNPs pass, 319,973 below 1% frequency
+  maf(AFR_EAF_AoU) >= 0.01 |   # 1,485,126 SNPs pass, 129,953 below 1% frequency
+  maf(AMR_EAF_AoU) >= 0.01     # 1,406,231 SNPs pass, 208,848 below 1% frequency
+  # 1,522,058 SNPs pass overall, 93,021 below 1% frequency in all three ancestries
+]
+
+# Filter any strand ambiguous SNPs that will be difficult to match in All of Us based on MAF
+# Reminder - we have already applied similar filtering based on allele frequencies in 1000 Genomes populations
+maf_cutoff <- 0.42
+varset[, ambig := effect_allele == flip_strand(other_allele)]
+varset <- varset[!(ambig) | (
+  maf(EUR_EAF_AoU) <= maf_cutoff & # 578 SNPs not matchable in All of Us EUR population
+  maf(AFR_EAF_AoU) <= maf_cutoff & # 6,828 SNPs not matchable in All of Us AFR population
+  maf(AMR_EAF_AoU) <= maf_cutoff   # 528 SNPs not matchable in All of Us AMR population
+  # 7,671 SNPs total excluded
+)]
+
 # Reorganise columns
-varset <- varset[,.(chr, pos_b36, pos_b37, pos_b38, rsid_HapMap3, rsid_1000G, AoU_varID, effect_allele, other_allele, 
+varset <- varset[,.(chr, pos_b36, pos_b37, pos_b38, rsid_HapMap3, rsid_1000G, rsid_AoU, AoU_varID, AoU_varID2, effect_allele, other_allele, 
   EAF_1000G, EUR_EAF_1000G, AFR_EAF_1000G, AMR_EAF_1000G, EAS_EAF_1000G, SAS_EAF_1000G, 
+  EUR_EAF_AoU, AFR_EAF_AoU, AMR_EAF_AoU, EAS_EAF_AoU, SAS_EAF_AoU, MID_EAF_AoU, OTH_EAF_AoU,
   ASW_HapMap3, CEU_HapMap3, CHB_HapMap3, CHD_HapMap3, GIH_HapMap3, JPT_HapMap3, 
   LWK_HapMap3, MEX_HapMap3, MKK_HapMap3, TSI_HapMap3, YRI_HapMap3)]
 
