@@ -62,14 +62,19 @@ varset[is.na(EAS_EAF_AoU), EAS_EAF_AoU := 0]
 varset[is.na(SAS_EAF_AoU), SAS_EAF_AoU := 0]
 varset[is.na(MID_EAF_AoU), MID_EAF_AoU := 0]
 varset[is.na(OTH_EAF_AoU), OTH_EAF_AoU := 0]
+stop()
 
-# Filter to variants that have >1% frequency in the EUR, AFR, or AMR populations in All of Us - this filter is applied later on by the
+# Filter to variants that have >1% frequency in any All of Us ancestry - this filter is applied later on by the
 # per-ancestry LDpred2 quality control when calculating the LD matrix (assuming 10K samples)
 varset <- varset[
-  maf(EUR_EAF_AoU) >= 0.01 |   # 1,295,106 SNPs pass, 319,973 below 1% frequency
-  maf(AFR_EAF_AoU) >= 0.01 |   # 1,485,126 SNPs pass, 129,953 below 1% frequency
-  maf(AMR_EAF_AoU) >= 0.01     # 1,406,231 SNPs pass, 208,848 below 1% frequency
-  # 1,522,058 SNPs pass overall, 93,021 below 1% frequency in all three ancestries
+  maf(EUR_EAF_AoU) >= 0.01 |   # 1,295,104 SNPs pass, 319,973 below 1% frequency
+  maf(AFR_EAF_AoU) >= 0.01 |   # 1,485,124 SNPs pass, 129,953 below 1% frequency
+  maf(AMR_EAF_AoU) >= 0.01 |   # 1,406,229 SNPs pass, 208,848 below 1% frequency
+  maf(EAS_EAF_AoU) >= 0.01 |   # 1,204,683 SNPs pass, 410,394 below 1% frequency
+  maf(SAS_EAF_AoU) >= 0.01 |   # 1,313,545 SNPs pass, 301,532 below 1% frequency
+  maf(MID_EAF_AoU) >= 0.01 |   # 1,354,677 SNPs pass, 260,400 below 1% frequency
+  maf(OTH_EAF_AoU) >= 0.01     # 1,465,460 SNPs pass, 149,617 below 1% frequency
+  # 1,537,448 SNPs pass overall, 77,629 below 1% frequency in all ancestries
 ]
 
 # Filter any strand ambiguous SNPs that will be difficult to match in All of Us based on MAF
@@ -79,9 +84,23 @@ varset[, ambig := effect_allele == flip_strand(other_allele)]
 varset <- varset[!(ambig) | (
   maf(EUR_EAF_AoU) <= maf_cutoff & # 578 SNPs not matchable in All of Us EUR population
   maf(AFR_EAF_AoU) <= maf_cutoff & # 6,828 SNPs not matchable in All of Us AFR population
-  maf(AMR_EAF_AoU) <= maf_cutoff   # 528 SNPs not matchable in All of Us AMR population
-  # 7,671 SNPs total excluded
+  maf(AMR_EAF_AoU) <= maf_cutoff & # 528 SNPs not matchable in All of Us AMR population
+  maf(EAS_EAF_AoU) <= maf_cutoff & # 758 SNPs not matchable in All of Us EAS population
+  maf(SAS_EAF_AoU) <= maf_cutoff & # 392 SNPs not matchable in All of Us SAS population
+  maf(MID_EAF_AoU) <= maf_cutoff & # 2,171 SNPs not matchable in All of Us MID population
+  maf(OTH_EAF_AoU) <= maf_cutoff   # 1,013 SNPs not matchable in All of Us OTH population
+  # 9,981 SNPs total excluded
 )]
+
+# Filter out any strand ambiguous SNPs where the allele frequency is inconsistent (in 
+# terms of being above or below 50%) across ancestries, which make strand alignment
+# challenging in All of Us (which we don't do on an ancestry-specific basis).
+ambig <- varset[(ambig)]
+ambig <- melt(ambig, id.vars="AoU_varID", measure.vars=c("EUR_EAF_AoU", "AFR_EAF_AoU", "AMR_EAF_AoU", "EAS_EAF_AoU", "SAS_EAF_AoU", "MID_EAF_AoU", "OTH_EAF_AoU"), variable.name="ancestry", value.name="EAF")
+ambig[, ancestry := gsub("_.*", "", ancestry)]
+ambig <- ambig[,.(consistent = all(EAF < 0.5) | all(EAF > 0.5)), by=.(AoU_varID)]
+bad <- ambig[!(consistent)] # 3,601 SNPs excluded
+varset <- varset[!bad, on = .(AoU_varID)]
 
 # Reorganise columns
 varset <- varset[,.(chr, pos_b36, pos_b37, pos_b38, rsid_HapMap3, rsid_1000G, rsid_AoU, AoU_varID, AoU_varID2, effect_allele, other_allele, 
