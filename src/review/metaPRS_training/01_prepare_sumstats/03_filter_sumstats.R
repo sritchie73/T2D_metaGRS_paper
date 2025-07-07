@@ -46,4 +46,27 @@ for (this_prs in gwas_list[`GWAS catalog accession or other download source` %li
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 } 
 
+##############################################################
+# Filter the 12 GIANT consortium summary statistics
+##############################################################
+for (this_prs in gwas_list[`GWAS catalog accession or other download source` %like% "GIANT", PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  this_pheno_fname <- this_gwas[, gsub(".*\n", "", `GWAS catalog accession or other download source`)]
+  gwas_ss <- fread(sprintf("data/gwas_summary_stats/GIANT/%s", this_pheno_fname), skip=8, header=FALSE) # Header row corrupted
+
+  # Sumstats files are a mix of those with just rsID, and those that also have chromosome and position on GRCh36
+  if (ncol(gwas_ss) == 8) { 
+    setnames(gwas_ss, c("MarkerName", "Allele1", "Allele2", "FreqAllele1HapMapCEU", "b", "se", "p", "N"))
+		gwas_ss <- gwas_ss[,.(rsid=MarkerName, EA=Allele1, OA=Allele2, beta=b, beta_se=se, samples=N, EAF=FreqAllele1HapMapCEU, neg_log10_p=-log10(p))]
+  } else if (ncol(gwas_ss) == 10) {
+    setnames(gwas_ss, c("MarkerName", "Chr", "Pos", "Allele1", "Allele2", "FreqAllele1HapMapCEU", "b", "se", "p", "N"))
+		gwas_ss <- gwas_ss[,.(chr=Chr, pos_b36=Pos, EA=Allele1, OA=Allele2, beta=b, beta_se=se, samples=N, EAF=FreqAllele1HapMapCEU, neg_log10_p=-log10(p))]
+  } else {
+    stop("unrecognised number of columns in GIANT summary statistics")
+  }
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+} 
+
 
