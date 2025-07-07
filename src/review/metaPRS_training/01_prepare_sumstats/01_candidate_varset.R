@@ -119,6 +119,9 @@ vars_1kg <- cbind(b38, vars_1kg)
 vars_1kg <- vars_1kg[!is.na(chr_b38)] # drop (N=200) SNPs on alternate contigs on b38
 vars_1kg <- vars_1kg[chr_b38 == `#CHROM`] # drop 1 SNP moved from chr 19 to chr 7 on b38
 
+dups <- vars_1kg[,.N,by=.(chr_b38, pos_b38)][N > 1]
+vars_1kg <- vars_1kg[!dups, on=.(chr_b38, pos_b38)] # drop 2 SNPs that have been merged into one on b38
+
 # Collate filtered variant information
 varset <- merge(vars_1kg, vars_hapmap, by.x=c("#CHROM", "POS"), by.y=c("chr", "pos_b37"), all.x=TRUE)
 varset <- varset[, .(chr=`#CHROM`, pos_b36, pos_b37=POS, pos_b38, rsid_HapMap3=rsid_b36, rsid_1000G=ID,
