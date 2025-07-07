@@ -69,4 +69,14 @@ for (this_prs in gwas_list[`GWAS catalog accession or other download source` %li
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 } 
 
+#####################################################################################
+# Filter GWAS summary statistics for CAD published by Koyama et al. 2020 on Figshare
+#####################################################################################
+
+gwas_ss <- fread("data/gwas_summary_stats/CAD_BBJ/BBJCAD_2020.sumstats.gz")
+gwas_ss <- gwas_ss[, .(chr=CHR, pos_b37=POS, EA=ALT, OA=REF, EAF=AAF, beta=BETA, beta_se=SE, neg_log10_p=-log10(P), samples=N)]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=25892, total_controls=142336)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/CAD_BBJ.txt.gz")
+
+
 
