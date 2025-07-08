@@ -102,3 +102,27 @@ for (this_prs in gwas_list[PRS %like% "GH_Exome" & is.na(Cases), PRS]) {
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
 
+##############################################################
+# Filter the 11 G&H case-control PheWAS
+##############################################################
+for (this_prs in gwas_list[`PubMed ID` == 31504546 & !is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  this_pheno_fname <- this_gwas[, gsub(".*\n", "", `GWAS catalog accession or other download source`)]
+  gwas_ss <- fread(sprintf("data/gwas_summary_stats/GenesAndHealth/PheWAS/2025_05_23_%s_singlevariant51kGSA-TOPMEDr3-GWAS_%s.regenie.gz", this_pheno_fname, this_pheno_fname))
+  gwas_ss <- gwas_ss[,.(chr=CHROM, pos_b38=GENPOS, EA=ALLELE1, OA=ALLELE0, beta=BETA, beta_se=SE, neg_log10_p=LOG10P, EAF=A1FREQ, samples=N)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+
+##############################################################
+# Filter the 4 G&H quantitative trait PheWAS
+##############################################################
+for (this_prs in gwas_list[`PubMed ID` == 31504546 & is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  this_pheno_fname <- this_gwas[, gsub(".*\n", "", `GWAS catalog accession or other download source`)]
+  gwas_ss <- fread(sprintf("data/gwas_summary_stats/GenesAndHealth/PheWAS/2025_05_13_%s_singlevariant51kGSA-TOPMEDr3-GWAS_%s.regenie.gz", this_pheno_fname, this_pheno_fname))
+  gwas_ss <- gwas_ss[,.(chr=CHROM, pos_b38=GENPOS, EA=ALLELE1, OA=ALLELE0, beta=BETA, beta_se=SE, neg_log10_p=LOG10P, EAF=A1FREQ, samples=N)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
