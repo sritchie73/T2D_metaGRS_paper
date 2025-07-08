@@ -55,8 +55,7 @@ for (this_prs in gwas_list[`GWAS catalog accession or other download source` %li
   gwas_ss <- fread(sprintf("data/gwas_summary_stats/GIANT/%s", this_pheno_fname), skip=8, header=FALSE) # Header row corrupted
 
   # Sumstats files are a mix of those with just rsID, and those that also have chromosome and position on GRCh36
-  if (ncol(gwas_ss) == 8) { 
-    setnames(gwas_ss, c("MarkerName", "Allele1", "Allele2", "FreqAllele1HapMapCEU", "b", "se", "p", "N"))
+
 		gwas_ss <- gwas_ss[,.(rsid=MarkerName, EA=Allele1, OA=Allele2, beta=b, beta_se=se, samples=N, EAF=FreqAllele1HapMapCEU, neg_log10_p=-log10(p))]
   } else if (ncol(gwas_ss) == 10) {
     setnames(gwas_ss, c("MarkerName", "Chr", "Pos", "Allele1", "Allele2", "FreqAllele1HapMapCEU", "b", "se", "p", "N"))
@@ -149,4 +148,79 @@ for (this_prs in gwas_list[`PubMed ID` == 31367044, PRS]) {
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
 
+#####################################################################################
+# Filter Psychiatric Genomics Consortium GWAS bip2021_noUKBB
+#####################################################################################
+gwas_ss <- fread("data/gwas_summary_stats/PGC/bip2021_noUKBB/daner_bip_pgc3_nm_noukbiobank.gz", fill=TRUE)
+gwas_ss[is.na(BP), names(gwas_ss)[1:12] := tstrsplit(CHR, " ")] # 88 malformed rows??
+gwas_ss[, samples := Nca + Nco]
+gwas_ss[, EAF := (FRQ_A_40463 * Nca + FRQ_U_313436 * Nco)/(samples)] # Frequency reported for cases and controls separately
+gwas_ss <- gwas_ss[,.(chr=CHR, pos_b37=BP, EA=A1, OA=A2, beta=log(OR), beta_se=SE, neg_log10_p=-log10(P), EAF, samples, cases=Nca, controls=Nco)]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=40463, total_controls=313436, total_samples=353899)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/Bipolar_PCG_2021_no_UKB.txt.gz")
+
+#####################################################################################
+# Filter Psychiatric Genomics Consortium GWAS bip2019
+#####################################################################################
+gwas_ss <- fread("data/gwas_summary_stats/PGC/daner_PGC_BIP32b_mds7a_0416a.gz")
+gwas_ss[, samples := Nca + Nco]
+gwas_ss[, EAF := (FRQ_A_20352 * Nca + FRQ_U_31358 * Nco)/(samples)] # Frequency reported for cases and controls separately
+gwas_ss <- gwas_ss[,.(chr=CHR, pos_b37=BP, EA=A1, OA=A2, beta=log(OR), beta_se=SE, neg_log10_p=-log10(P), EAF, samples, cases=Nca, controls=Nco)]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=20352, total_controls=31358, total_samples=51710)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/Bipolar_PCG_2019.txt.gz")
+
+#####################################################################################
+# Filter Psychiatric Genomics Consortium GWAS mdd2025
+#####################################################################################
+gwas_ss <- fread("data/gwas_summary_stats/PGC/mdd2025/daner_pgc_mdd_no23andMe-noUKBB_eur_hg19_v3.49.24.11.neff.gz")
+gwas_ss[, samples := Nca + Nco]
+gwas_ss[, EAF := (FRQ_A_357636 * Nca + FRQ_U_1281936 * Nco)/(samples)] # Frequency reported for cases and controls separately
+gwas_ss <- gwas_ss[,.(chr=CHR, pos_b37=BP, EA=A1, OA=A2, beta=log(OR), beta_se=SE, neg_log10_p=-log10(P), EAF, samples, cases=Nca, controls=Nco)]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=357636, total_controls=1281936, total_samples=1639572)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/Depression_PCG_2025_no_UKB.txt.gz")
+
+#####################################################################################
+# Filter 5 Psychiatric Genomics Consortium GWASs in study mdd2023diverse
+#####################################################################################
+for (this_prs in gwas_list[PRS %like% "Depression_PCG_2023", PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  this_pheno_fname <- this_gwas[, gsub(".*\n", "", `GWAS catalog accession or other download source`)]
+  gwas_ss <- fread(sprintf("data/gwas_summary_stats/PGC/mdd2023diverse/%s.gz", this_pheno_fname))
+  gwas_ss[, EA := toupper(EA)]
+  gwas_ss[, NEA := toupper(NEA)]
+  gwas_ss[, samples := Ncase + Ncontrol]
+  gwas_ss <- gwas_ss[,.(chr=Chromosome, pos_b37=Position, EA, OA=NEA, beta=logOR, beta_se=SE, neg_log10_p=-log10(P), EAF, cases=Ncase, controls=Ncontrol, samples)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=this_gwas$Cases, total_controls=this_gwas$Controls, total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#####################################################################################
+# Filter 5 Psychiatric Genomics Consortium GWASs in study scz2022
+#####################################################################################
+for (this_prs in gwas_list[PRS %like% "Schizophrenia_PCG_2022", PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  this_pheno_fname <- this_gwas[, gsub(".*\n", "", `GWAS catalog accession or other download source`)]
+  gwas_ss <- fread(sprintf("data/gwas_summary_stats/PGC/scz2022/%s", this_pheno_fname))
+
+  # Per-SNP case and control counts missing in African American and Latino ancestry GWASs
+  if (!("NCAS" %in% names(gwas_ss))) {
+    gwas_ss[, NCAS := this_gwas$Cases]
+    gwas_ss[, NCON := this_gwas$Controls]
+  }
+
+	gwas_ss[, samples := NCAS + NCON]
+	gwas_ss[, EAF := (FCAS * NCAS + FCON * NCON)/(samples)] # Frequency reported for cases and controls separately
+  gwas_ss <- gwas_ss[,.(chr=CHROM, pos_b37=POS, EA=A1, OA=A2, beta=BETA, beta_se=SE, neg_log10_p=-log10(PVAL), EAF, cases=NCAS, controls=NCON, samples)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=this_gwas$Cases, total_controls=this_gwas$Controls, total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+
+#####################################################################################
+# Filter Psychiatric Genomics Consortium GWAS scz2018clozuk
+#####################################################################################
+gwas_ss <- fread("data/gwas_summary_stats/PGC/scz2018clozuk/CLOZUK_PGC2noclo.METAL.assoc.dosage.fix.gz")
+gwas_ss <- gwas_ss[,.(chr=CHR, pos_b37=BP, EA=A1, OA=A2, beta=log(OR), beta_se=SE, neg_log10_p=-log10(P))] # No EAF column
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=40675, total_controls=64643)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/Schizophrenia_PCG_2018.txt.gz")
 
