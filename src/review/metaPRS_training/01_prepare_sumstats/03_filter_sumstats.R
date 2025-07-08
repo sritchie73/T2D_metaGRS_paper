@@ -78,5 +78,27 @@ gwas_ss <- gwas_ss[, .(chr=CHR, pos_b37=POS, EA=ALT, OA=REF, EAF=AAF, beta=BETA,
 gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=25892, total_controls=142336)
 fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/CAD_BBJ.txt.gz")
 
+##############################################################
+# Filter the 9 G&H case-control ExWAS
+##############################################################
+for (this_prs in gwas_list[PRS %like% "GH_Exome" & !is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  this_pheno_fname <- this_gwas[, gsub(".*\n", "", `GWAS catalog accession or other download source`)]
+  gwas_ss <- fread(sprintf("data/gwas_summary_stats/GenesAndHealth/ExWAS/2024_02_05_%s_GNH_singlevariantExWAS_%s.regenie.gz", this_pheno_fname, this_pheno_fname))
+  gwas_ss <- gwas_ss[,.(chr=CHROM, pos_b38=GENPOS, EA=ALLELE1, OA=ALLELE0, beta=BETA, beta_se=SE, neg_log10_p=LOG10P, EAF=A1FREQ, samples=N)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
 
+##############################################################
+# Filter the 18 G&H quantitative trait ExWAS
+##############################################################
+for (this_prs in gwas_list[PRS %like% "GH_Exome" & is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  this_pheno_fname <- this_gwas[, gsub(".*\n", "", `GWAS catalog accession or other download source`)]
+  gwas_ss <- fread(sprintf("data/gwas_summary_stats/GenesAndHealth/ExWAS/2024_05_08_%s.residual_GNH_singlevariantExWAS_%s.residual.regenie.gz", this_pheno_fname, this_pheno_fname))
+  gwas_ss <- gwas_ss[,.(chr=CHROM, pos_b38=GENPOS, EA=ALLELE1, OA=ALLELE0, beta=BETA, beta_se=SE, neg_log10_p=LOG10P, EAF=A1FREQ, samples=N)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
 
