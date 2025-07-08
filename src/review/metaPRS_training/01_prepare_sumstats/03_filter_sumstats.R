@@ -126,3 +126,13 @@ for (this_prs in gwas_list[`PubMed ID` == 31504546 & is.na(Cases), PRS]) {
   gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
+
+#####################################################################################
+# Filter GWAS summary statistics for T2D available through DIAGRAM website
+#####################################################################################
+
+gwas_ss <- fread("data/gwas_summary_stats/DIAGRAM/Mahajan.NatGenet2018b.T2D-noUKBB.European.zip")
+gwas_ss <- gwas_ss[,.(chr=Chr, pos_b37=Pos, EA, OA=NEA, beta=Beta, beta_se=SE, EAF, neg_log10_p=-log10(Pvalue))]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=55005, total_controls=400308)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/T2D_2018_no_UKB.txt.gz")
+
