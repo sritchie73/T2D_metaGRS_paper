@@ -377,7 +377,28 @@ for (this_prs in gwas_list[`PubMed ID` == 29507422, PRS]) {
   gwas_ss[EA == a2, OA := a1]
 
   gwas_ss <- gwas_ss[,.(chr=chromosome, pos_b37=position, EA, OA, beta, neg_log10_p=-log10(Pval), EAF, samples)]
-  gwas_ss[, beta_se := lm_se(beta, neg_log10_p, samples, 13)] # 13 covariate: age^3, sex, BMI^3, and 10 PCs 
+  gwas_ss[, beta_se := lm_se(beta, neg_log10_p, samples, 13)] # 13 covariates: age^3, sex, BMI^3, and 10 PCs 
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#####################################################################################
+# Filter the 3 GERA Blood Pressure GWAS (PMID: 27841878)
+#####################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 27841878, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern="*.tsv.gz", path=sprintf("data/gwas_summary_stats/GWAS_Catalog/PMID_27841878/%s/", gcstid), full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+  setnames(gwas_ss, c("Allele 1", "Allele 2", "Effect allele (EA)", "Effect allele frequency (EAF)", "Sample size", "Estimate Effect", "P value"),
+           c("a1", "a2", "EA", "EAF", "samples", "beta", "Pval"))
+  
+  gwas_ss[EA == a1, OA := a2]
+  gwas_ss[EA == a2, OA := a1]
+
+  gwas_ss <- gwas_ss[,.(chr=chromosome, pos_b37=position, EA, OA, beta, neg_log10_p=-log10(Pval), EAF, samples)]
+  gwas_ss[, beta_se := lm_se(beta, neg_log10_p, samples, 14)] # 14 covariates: age, age^2, sex, BMI, and 10 PCs 
 
   gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
