@@ -41,7 +41,13 @@ for (this_prs in gwas_list[`GWAS catalog accession or other download source` %li
   this_gwas <- gwas_list[PRS == this_prs]
   this_pheno_fname <- this_gwas[, gsub(".* ", "", `GWAS catalog accession or other download source`)]
   gwas_ss <- fread(sprintf("data/gwas_summary_stats/CKB/phenocode-%s.tsv.gz", this_pheno_fname))
-  gwas_ss <- gwas_ss[,.(chr=chrom, pos_b38=pos, EA=alt, OA=ref, beta, beta_se=sebeta, neg_log10_p=-log10(pval), EAF=af)]
+  if ("chrom" %in% names(gwas_ss)) {
+		gwas_ss <- gwas_ss[,.(chr=chrom, pos_b38=pos, EA=alt, OA=ref, beta, beta_se=sebeta, neg_log10_p=-log10(pval), EAF=af)]
+  } else {
+    # SBP and PP have different column headings to other 9 traits for some reason
+    gwas_ss <- gwas_ss[,.(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                          neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+  }
   gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 } 
