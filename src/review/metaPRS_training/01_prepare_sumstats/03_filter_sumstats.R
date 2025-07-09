@@ -404,3 +404,49 @@ for (this_prs in gwas_list[`PubMed ID` == 27841878, PRS]) {
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
 
+#####################################################################################
+# Filter the 2017 DIAGRAM T2D GWAS (PMID: 28566273)
+#####################################################################################
+gwas_ss <- fread("data/gwas_summary_stats/GWAS_Catalog/PMID_28566273/METAANALYSIS_DIAGRAM_SE1.txt")
+gwas_ss[, c("chr", "pos_b37") := tstrsplit(`Chr:Position`, ":", type.convert=TRUE)]
+gwas_ss <- gwas_ss[,.(chr, pos_b37, EA=Allele1, OA=Allele2, beta=Effect, beta_se=StdErr,
+                      samples=TotalSampleSize, neg_log10_p=-log10(`P-value`))] # No EAF column
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=26676, total_controls=132532, total_samples=159208)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/T2D_2017.txt.gz")
+
+#####################################################################################
+# Filter the 2019 African T2D GWAS (PMID: 31049640)
+#####################################################################################
+gwas_ss <- fread("data/gwas_summary_stats/GWAS_Catalog/PMID_31049640/ChenJ_31049640")
+gwas_ss[, c("chr", "pos_b37") := tstrsplit(MarkerName, ":", keep=1:2, type.convert=TRUE)]
+gwas_ss <- gwas_ss[,.(chr, pos_b37, EA=toupper(Allele1), OA=toupper(Allele2), beta=Effect, beta_se=StdErr, n_eff=Weight,
+                      EAF=Freq1, neg_log10_p=-log10(`P-value`))]
+gwas_ss <- filter_sumstats(gwas_ss)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/T2D_Africa.txt.gz")
+
+#####################################################################################
+# Filter the 2019 BBJ T2D GWAS (PMID: 30718926)
+#####################################################################################
+gwas_ss <- fread("data/gwas_summary_stats/GWAS_Catalog/PMID_30718926/BBJ_BetaBased1.MAF_001.AtLeast2studies.AllChr.txt.gz")
+gwas_ss <- gwas_ss[,.(chr=CHR, pos_b37=POS, EA=ALT, OA=REF, beta=BETA, beta_se=SE, samples=N,
+                      EAF=Frq, neg_log10_p=-log10(P))]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=6967, total_controls=49670)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/T2D_Japan.txt.gz")
+
+#####################################################################################
+# Filter the 2018 PCOS GWAS (PMID: 30566500)
+#####################################################################################
+gwas_ss <- fread("data/gwas_summary_stats/GWAS_Catalog/PMID_30566500/PCOS_top_10000_SNPS.txt") # includes 23andMe, hence only top 10k SNPs
+gwas_ss[, c("chr", "pos_b37") := tstrsplit(MarkerName, ":", keep=1:2, type.convert=TRUE)]
+gwas_ss <- gwas_ss[, .(chr, pos_b37, EA=toupper(Allele1), OA=toupper(Allele2), EAF=Freq1, beta=Effect, beta_se=StdErr, samples=TotalSampleSize, neg_log10_p=-log10(Pvalue))]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=10074, total_controls=103164)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/PCOS_2018.txt.gz")
+
+#####################################################################################
+# Filter the 2016 Educational Attainment GWAS (PMID: 27225129)
+#####################################################################################
+gwas_ss <- fread("data/gwas_summary_stats/GWAS_Catalog/PMID_27225129/Okbay_27225129-EduYears_Discovery_5000.txt")
+gwas_ss <- gwas_ss[, .(chr=CHR, pos_b37=POS, EA=A1, OA=A2, EAF, beta=Beta, beta_se=SE, neg_log10_p=-log10(Pval))]
+gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=280007)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/EduYears_EUR.txt.gz")
+
