@@ -344,3 +344,21 @@ for (this_prs in gwas_list[`PubMed ID` == 29273807, PRS]) {
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
 
+#####################################################################################
+# Filter the 4 multi-ancestry Lipid ExWAS (PMID: 29083408)
+#####################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 29083408, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern="*.txt", path=sprintf("data/gwas_summary_stats/GWAS_Catalog/PMID_29083408/%s/", gcstid), full.names=TRUE)
+  gwas_fname <- gwas_fname[!(gwas_fname %like% "md5sum.txt")] 
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss[, c("chr", "pos_b37") := tstrsplit(SNP_hg19, ":", type.convert=TRUE)]
+  setnames(gwas_ss, names(gwas_ss)[names(gwas_ss) %like% "Freq.A1"], "EAF")
+
+  gwas_ss <- gwas_ss[,.(chr, pos_b37, EA=A1, OA=A2, beta=Beta, beta_se=SE, neg_log10_p=-log10(`P-value`), EAF, samples=N)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
