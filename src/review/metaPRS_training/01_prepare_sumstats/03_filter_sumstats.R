@@ -318,4 +318,29 @@ for (this_prs in gwas_list[`PubMed ID` == 31089300 & is.na(Cases), PRS]) {
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
 
+#####################################################################################
+# Filter the 4 ancestry specific BMI ExWAS (PMID: 29273807)
+#####################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 29273807, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern="*.txt.gz", path=sprintf("data/gwas_summary_stats/GWAS_Catalog/PMID_29273807/%s/", gcstid), full.names=TRUE)
+  gwas_ss <- fread(gwas_fname, fill=TRUE, na.strings=c("NA", "-"))
+  
+  # Process weird MAF format
+  setnames(gwas_ss, names(gwas_ss)[names(gwas_ss) %like% "MAF" & !(names(gwas_ss) %like% "ExAC")], "MAF_pairs")
+  pairs <- strsplit(gwas_ss$MAF_pairs, ",")
+  pairs <- sapply(pairs, unique)
+  pairs <- sapply(pairs, function(x) {  if(length(x) > 1) { x[!(x %like% "-")] } else { x } })
+  gwas_ss[, MAF_pair := unlist(pairs)]
+  gwas_ss[, c("MA", "MAF") := tstrsplit(MAF_pair, ":", type.convert=TRUE)]
+  gwas_ss[MA == ALT, EAF := MAF]
+  gwas_ss[is.na(EAF) & MA == flip_strand(ALT), EAF := MAF]
+  gwas_ss[is.na(EAF) & MA == REF, EAF := 1 - MAF]
+  gwas_ss[is.na(EAF) & MA == flip_strand(REF), EAF := 1 - MAF]
+
+  gwas_ss <- gwas_ss[,.(chr=CHR, pos_b37=POS, EA=ALT, OA=REF, beta, beta_se=se, neg_log10_p=-log10(Pvalue), EAF)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
 
