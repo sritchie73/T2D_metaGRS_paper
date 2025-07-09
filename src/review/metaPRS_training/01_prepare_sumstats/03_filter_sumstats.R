@@ -448,5 +448,5 @@ fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sums
 gwas_ss <- fread("data/gwas_summary_stats/GWAS_Catalog/PMID_27225129/Okbay_27225129-EduYears_Discovery_5000.txt")
 gwas_ss <- gwas_ss[, .(chr=CHR, pos_b37=POS, EA=A1, OA=A2, EAF, beta=Beta, beta_se=SE, neg_log10_p=-log10(Pval))]
 gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=280007)
-fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/EduYears_EUR.txt.gz")
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/EduYears_EUR_noUKB.txt.gz")
 
