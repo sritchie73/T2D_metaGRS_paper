@@ -35,14 +35,26 @@ for (this_prs in gwas_list[PRS %like% "FinnGen" & is.na(Cases), PRS]) {
 }
 
 ##############################################################
-# Filter the 8 pQTL CKB summary statistics
+# Filter the 11 qunatitative CKB summary statistics
 ##############################################################
-for (this_prs in gwas_list[`GWAS catalog accession or other download source` %like% 'pheweb.ckbiobank.org', PRS]) {
+for (this_prs in gwas_list[`GWAS catalog accession or other download source` %like% 'pheweb.ckbiobank.org' & is.na(Cases), PRS]) {
   this_gwas <- gwas_list[PRS == this_prs]
   this_pheno_fname <- this_gwas[, gsub(".* ", "", `GWAS catalog accession or other download source`)]
-  gwas_ss <- fread(sprintf("data/gwas_summary_stats/CKB_pQTLs/phenocode-%s.tsv.gz", this_pheno_fname))
+  gwas_ss <- fread(sprintf("data/gwas_summary_stats/CKB/phenocode-%s.tsv.gz", this_pheno_fname))
   gwas_ss <- gwas_ss[,.(chr=chrom, pos_b38=pos, EA=alt, OA=ref, beta, beta_se=sebeta, neg_log10_p=-log10(pval), EAF=af)]
   gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+} 
+
+##############################################################
+# Filter the 7 case-control GWAS CKB summary statistics
+##############################################################
+for (this_prs in gwas_list[`GWAS catalog accession or other download source` %like% 'pheweb.ckbiobank.org' & !is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  this_pheno_fname <- this_gwas[, gsub(".* ", "", `GWAS catalog accession or other download source`)]
+  gwas_ss <- fread(sprintf("data/gwas_summary_stats/CKB/phenocode-%s.tsv.gz", this_pheno_fname))
+  gwas_ss <- gwas_ss[,.(chr=chrom, pos_b38=pos, EA=alt, OA=ref, beta, beta_se=sebeta, neg_log10_p=-log10(pval), EAF=af)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_samples=this_gwas$Samples, total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 } 
 
