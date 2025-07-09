@@ -224,3 +224,52 @@ gwas_ss <- gwas_ss[,.(chr=CHR, pos_b37=BP, EA=A1, OA=A2, beta=log(OR), beta_se=S
 gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=40675, total_controls=64643)
 fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/Schizophrenia_PCG_2018.txt.gz")
 
+#####################################################################################
+# Filter the 16 UGR GWASs (PMID: 31675503)
+#####################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 31675503, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern="*.txt.gz", path=sprintf("data/gwas_summary_stats/GWAS_Catalog/PMID_31675503/%s/", gcstid), full.names=TRUE)
+  gwas_ss <- fread(gwas_fname, fill=TRUE)
+
+  gwas_ss[, c("chr", "pos_b37", "EA", "OA") := tstrsplit(snpid, ":")]
+  gwas_ss[, pos_b37 := as.integer(pos_b37)]
+
+  # Harmonize meta-analysis study specific columns
+  if (this_prs == "HbA1c_UGR") gwas_ss[, no_DCC := 7526 - no_uganda] # column missing data for some reason
+
+  if ("af_uganda" %in% names(gwas_ss)) {
+		gwas_ss[is.na(af_uganda), c("af_uganda", "no_uganda") := 0]
+  } else {
+    gwas_ss[, c("af_uganda", "no_uganda") := 0]
+  }
+
+  if ("af_DCC" %in% names(gwas_ss)) {
+		gwas_ss[is.na(af_DCC), c("af_DCC", "no_DCC") := 0]
+  } else {
+    gwas_ss[, c("af_DCC", "no_DCC") := 0]
+  }
+
+  if ("af_DDS" %in% names(gwas_ss)) {
+		gwas_ss[is.na(af_DDS), c("af_DSS", "no_DSS") := 0]
+  } else {
+    gwas_ss[, c("af_DDS", "no_DSS") := 0]
+  }
+
+  if ("af_AADM" %in% names(gwas_ss)) {
+		gwas_ss[is.na(af_AADM), c("af_AADM", "no_AADM") := 0]
+  } else {
+    gwas_ss[, c("af_AADM", "no_AADM") := 0]
+  }
+
+  # Compute overall allele frequency across meta-analysis
+  gwas_ss[, samples := no_uganda + no_DCC + no_DDS + no_AADM]
+  gwas_ss[, EAF := (af_uganda*no_uganda + af_DCC*no_DCC + af_DDS*no_DDS + af_AADM*no_AADM)/samples]
+
+  gwas_ss <- gwas_ss[, .(chr, pos_b37, EA, OA, beta=beta_re, beta_se=se_re, neg_log10_p=-log10(pval_re2), EAF, samples)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+
