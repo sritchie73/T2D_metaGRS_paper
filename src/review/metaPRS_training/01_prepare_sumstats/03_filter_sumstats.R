@@ -290,4 +290,32 @@ for (this_prs in gwas_list[`PubMed ID` == 31675503, PRS]) {
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
 
+#####################################################################################
+# Filter the 3 Biobank Japan Smoking Status GWAS (PMID: 31089300)
+#####################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 31089300 & !is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern="*_autosome_.*.txt.gz", path=sprintf("data/gwas_summary_stats/GWAS_Catalog/PMID_31089300/%s/", gcstid), full.names=TRUE)
+  gwas_ss <- fread(gwas_fname, fill=TRUE)
+  gwas_ss[, BETA := bolt_lmm_fix(BETA, this_gwas$Cases, this_gwas$Controls)] # Conversion of BOLT-LMM linear model beta to log odds ratio 
+  gwas_ss[, SE := bolt_lmm_fix(SE, this_gwas$Cases, this_gwas$Controls)]
+  gwas_ss <- gwas_ss[,.(chr=CHR, pos_b37=POS, EA=A1, OA=A2, beta=BETA, beta_se=SE, EAF=A1Frq, neg_log10_p=-log10(P))]
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#####################################################################################
+# Filter the 3 Biobank Japan Smoking Severity GWAS (PMID: 31089300)
+#####################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 31089300 & is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern="*_autosome_.*.txt.gz", path=sprintf("data/gwas_summary_stats/GWAS_Catalog/PMID_31089300/%s/", gcstid), full.names=TRUE)
+  gwas_ss <- fread(gwas_fname, fill=TRUE)
+  gwas_ss <- gwas_ss[,.(chr=CHR, pos_b37=POS, EA=A1, OA=A2, beta=BETA, beta_se=as.numeric(SE), EAF=A1Frq, neg_log10_p=-log10(P))] # ignore warning message about NA coercion, one SNP has a SE of '.' for CigsPerDayFemale_BBJ
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
 
