@@ -21,6 +21,14 @@ lm_se <- function(beta, neg_log10_p, samples, n_covar=0) {
   abs(beta)/abs(t_stat)
 }
 
+# Or from 95% Confidence intervals if those are reported
+se_from_ci <- function(beta, L95, U95) {
+  Zconst <- qnorm(p=0.05/2, lower.tail=F)
+  se_from_U95 = (U95 - beta)/Zconst # Rearrangement of 95% CI = beta +/- 1.96 * se
+  se_from_L95 = (beta - L95)/Zconst
+  (se_from_L95 + se_from_U95)/2 # as either limit can give slightly different se
+}
+
 # Correction of BOLT-LMM beta and se for case %
 # https://alkesgroup.broadinstitute.org/BOLT-LMM/BOLT-LMM_manual.html#x1-470008
 bolt_lmm_fix <- function(x, cases, controls) {

@@ -487,8 +487,9 @@ for (this_prs in gwas_list[`PubMed ID` == 39024449 & !is.na(Cases), PRS]) {
   gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
   gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
   gwas_ss <- fread(gwas_fname)
-
-  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+  
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, 
+                         beta=log(odds_ratio), beta_se=se_from_ci(log(odds_ratio), log(ci_lower), log(ci_upper)),
                          neg_log10_p=-log10(p_value), EAF=effect_allele_frequency, samples=n, cases=num_cases, controls=num_controls)]
 
   gwas_ss <- filter_sumstats(gwas_ss, type="case/control")
