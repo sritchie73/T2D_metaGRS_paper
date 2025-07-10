@@ -496,4 +496,22 @@ for (this_prs in gwas_list[`PubMed ID` == 39024449 & !is.na(Cases), PRS]) {
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
 
+#####################################################################################
+# Filter the 29 BBJ+TWB meta-analyses quantitative trait GWASs (PMID: 38116116)
+#####################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 38116116, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency, samples=n)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+
+
 
