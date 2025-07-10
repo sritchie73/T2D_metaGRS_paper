@@ -30,7 +30,7 @@ wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90476001-GCST
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90479001-GCST90480000/GCST90479626/harmonised/GCST90479626.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90448001-GCST90449000/GCST90448611/harmonised/GCST90448611.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018735/harmonised/34594039-GCST90018735-EFO_0004468.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90002001-GCST90003000/GCST90002227/harmonised/GCST90002227.h.tsv.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90002001-GCST90003000/GCST90002227/harmonised/34059833-GCST90002227-EFO_0004307.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90002001-GCST90003000/GCST90002228/harmonised/34059833-GCST90002228-EFO_0004307.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90002001-GCST90003000/GCST90002226/harmonised/34059833-GCST90002226-EFO_0004307.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90002001-GCST90003000/GCST90002225/harmonised/34059833-GCST90002225-EFO_0004307.h.tsv.gz
@@ -142,7 +142,7 @@ wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90162001-GCST
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90088001-GCST90089000/GCST90088808/harmonised/35078996-GCST90088808-EFO_0007937.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST005001-GCST006000/GCST005064/harmonised/28887542-GCST005064-EFO_0004736.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90448001-GCST90449000/GCST90448610/harmonised/GCST90448610.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018734/harmonised/GCST90018734.h.tsv.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018734/harmonised/34594039-GCST90018734-EFO_0004532.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90278001-GCST90279000/GCST90278630/harmonised/GCST90278630.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90278001-GCST90279000/GCST90278659/harmonised/GCST90278659.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90013001-GCST90014000/GCST90013317/harmonised/33623009-GCST90013317-EFO_0004532.h.tsv.gz
@@ -192,7 +192,7 @@ wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90476001-GCST
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90481001-GCST90482000/GCST90481158/harmonised/GCST90481158.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST005001-GCST006000/GCST005838/harmonised/29531354-GCST005838-EFO_0000712.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST006001-GCST007000/GCST006906/harmonised/29531354-GCST006906-EFO_0000712.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018644/harmonised/GCST90018644.h.tsv.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018644/harmonised/34594039-GCST90018644-HP_0002140.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST005001-GCST006000/GCST005843/harmonised/29531354-GCST005843-HP_0002140.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST006001-GCST007000/GCST006908/harmonised/29531354-GCST006908-HP_0002140.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST005001-GCST006000/GCST005842/harmonised/29531354-GCST005842-EFO_1001976.h.tsv.gz
