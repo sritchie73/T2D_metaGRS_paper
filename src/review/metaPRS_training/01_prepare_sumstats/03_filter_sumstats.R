@@ -10,6 +10,11 @@ gwas_list[, Samples := as.integer(gsub(",", "", Samples))]
 gwas_list[, Cases := as.integer(gsub(",", "", Cases))]
 gwas_list[, Controls := as.integer(gsub(",", "", Controls))]
 
+##
+## Start with GWASs that are either not in the GWAS Catalog, or have not been harmonized
+## by the GWAS Catalog into their standard format
+##
+
 ######################################################### 
 # Filter the 14 case-control FinnGenn summary statistics
 #########################################################
@@ -89,7 +94,6 @@ for (this_prs in gwas_list[`GWAS catalog accession or other download source` %li
 #####################################################################################
 # Filter GWAS summary statistics for CAD published by Koyama et al. 2020 on Figshare
 #####################################################################################
-
 gwas_ss <- fread("data/gwas_summary_stats/CAD_BBJ/BBJCAD_2020.sumstats.gz")
 gwas_ss <- gwas_ss[, .(chr=CHR, pos_b37=POS, EA=ALT, OA=REF, EAF=AAF, beta=BETA, beta_se=SE, neg_log10_p=-log10(P), samples=N)]
 gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=25892, total_controls=142336)
@@ -151,6 +155,11 @@ gwas_ss <- fread("data/gwas_summary_stats/DIAGRAM/Mahajan.NatGenet2018b.T2D-noUK
 gwas_ss <- gwas_ss[,.(chr=Chr, pos_b37=Pos, EA, OA=NEA, beta=Beta, beta_se=SE, EAF, neg_log10_p=-log10(Pvalue))]
 gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=55005, total_controls=400308)
 fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/T2D_2018_no_UKB.txt.gz")
+
+##
+## Moving on to GWASs with summary stats available through the GWAS Catalog, but which
+## haven't been harmonized by them into their standard format
+##
 
 #####################################################################################
 # Filter 18 GWAS summary statistics bundled into GCST008673 on the GWAS Catalog
@@ -449,4 +458,41 @@ gwas_ss <- fread("data/gwas_summary_stats/GWAS_Catalog/PMID_27225129/Okbay_27225
 gwas_ss <- gwas_ss[, .(chr=CHR, pos_b37=POS, EA=A1, OA=A2, EAF, beta=Beta, beta_se=SE, neg_log10_p=-log10(Pval))]
 gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=280007)
 fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/EduYears_EUR_noUKB.txt.gz")
+
+##
+## Now onto GWASs that have harmonized summary statistics in the GWAS Catalog
+##
+
+#####################################################################################
+# Filter the 58 MVP quantitative trait GWASs (PMID: 39024449)
+#####################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 39024449 & is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency, samples=n)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#####################################################################################
+# Filter the 38 MVP case/control GWASs (PMID: 39024449)
+#####################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 39024449 & !is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency, samples=n, cases=num_cases, controls=num_controls)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
 
