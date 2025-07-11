@@ -10,10 +10,12 @@ gwas_list[, Samples := as.integer(gsub(",", "", Samples))]
 gwas_list[, Cases := as.integer(gsub(",", "", Cases))]
 gwas_list[, Controls := as.integer(gsub(",", "", Controls))]
 
-##
-## Start with GWASs that are either not in the GWAS Catalog, or have not been harmonized
-## by the GWAS Catalog into their standard format
-##
+#####################################################################################
+##                                                                                 ##
+## Start with GWASs that are either not in the GWAS Catalog, or have not been      ##
+## harmonized by the GWAS Catalog into their standard format                       ##
+##                                                                                 ##
+#####################################################################################
 
 ######################################################### 
 # Filter the 14 case-control FinnGenn summary statistics
@@ -156,25 +158,6 @@ gwas_ss <- gwas_ss[,.(chr=Chr, pos_b37=Pos, EA, OA=NEA, beta=Beta, beta_se=SE, E
 gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=55005, total_controls=400308)
 fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/T2D_2018_no_UKB.txt.gz")
 
-##
-## Moving on to GWASs with summary stats available through the GWAS Catalog, but which
-## haven't been harmonized by them into their standard format
-##
-
-#####################################################################################
-# Filter 18 GWAS summary statistics bundled into GCST008673 on the GWAS Catalog
-#####################################################################################
-for (this_prs in gwas_list[`PubMed ID` == 31367044, PRS]) {
-  this_gwas <- gwas_list[PRS == this_prs]
-  this_pheno_fname <- this_gwas[, gsub(".* ", "", `GWAS catalog accession or other download source`)]
-  gwas_ss <- fread(sprintf("data/gwas_summary_stats/GWAS_Catalog/GCST008673/LockeAE_prePMID_%s_sex-combined.gz", this_pheno_fname))
-  gwas_ss[, c("REF", "ALT") := tstrsplit(gsub("_.*", "", gsub(".*:[0-9]*_", "", MARKER_ID)), "/")]
-  gwas_ss[, EAF := AC / (NS*2)]
-  gwas_ss <- gwas_ss[,.(chr=CHROM, pos_b37=BEG, EA=ALT, OA=REF, beta=BETA, beta_se=SEBETA, neg_log10_p=-log10(PVALUE), EAF, samples=NS)] 
-  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
-  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
-}
-
 #####################################################################################
 # Filter Psychiatric Genomics Consortium GWAS bip2021_noUKBB
 #####################################################################################
@@ -242,7 +225,6 @@ for (this_prs in gwas_list[PRS %like% "Schizophrenia_PCG_2022", PRS]) {
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
 
-
 #####################################################################################
 # Filter Psychiatric Genomics Consortium GWAS scz2018clozuk
 #####################################################################################
@@ -250,6 +232,27 @@ gwas_ss <- fread("data/gwas_summary_stats/PGC/scz2018clozuk/CLOZUK_PGC2noclo.MET
 gwas_ss <- gwas_ss[,.(chr=CHR, pos_b37=BP, EA=A1, OA=A2, beta=log(OR), beta_se=SE, neg_log10_p=-log10(P))] # No EAF column
 gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=40675, total_controls=64643)
 fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/Schizophrenia_PCG_2018.txt.gz")
+
+#####################################################################################
+##                                                                                 ##
+## Moving on to GWASs with summary stats available through the GWAS Catalog, but   ##
+## which haven't been harmonized by them into their standard format                ##
+##                                                                                 ##
+#####################################################################################
+
+#####################################################################################
+# Filter 18 GWAS summary statistics bundled into GCST008673 on the GWAS Catalog
+#####################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 31367044, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  this_pheno_fname <- this_gwas[, gsub(".* ", "", `GWAS catalog accession or other download source`)]
+  gwas_ss <- fread(sprintf("data/gwas_summary_stats/GWAS_Catalog/GCST008673/LockeAE_prePMID_%s_sex-combined.gz", this_pheno_fname))
+  gwas_ss[, c("REF", "ALT") := tstrsplit(gsub("_.*", "", gsub(".*:[0-9]*_", "", MARKER_ID)), "/")]
+  gwas_ss[, EAF := AC / (NS*2)]
+  gwas_ss <- gwas_ss[,.(chr=CHROM, pos_b37=BEG, EA=ALT, OA=REF, beta=BETA, beta_se=SEBETA, neg_log10_p=-log10(PVALUE), EAF, samples=NS)] 
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
 
 #####################################################################################
 # Filter the 16 UGR GWASs (PMID: 31675503)
@@ -295,6 +298,20 @@ for (this_prs in gwas_list[`PubMed ID` == 31675503, PRS]) {
   gwas_ss[, EAF := (af_uganda*no_uganda + af_DCC*no_DCC + af_DDS*no_DDS + af_AADM*no_AADM)/samples]
 
   gwas_ss <- gwas_ss[, .(chr, pos_b37, EA, OA, beta=beta_re, beta_se=se_re, neg_log10_p=-log10(pval_re2), EAF, samples)]
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 8 Insulin sensitivity/resistance GWASs (PMID: 37291194)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 37291194, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern="*.tsv.gz$", path=sprintf("data/gwas_summary_stats/GWAS_Catalog/PMID_37291194/%s/", gcstid), full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+  gwas_ss <- gwas_ss[,.(chr=chromosome, pos_b37=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                        EAF=effect_allele_frequency, neg_log10_p=-log10(p_value), samples=n)]
   gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
@@ -459,9 +476,11 @@ gwas_ss <- gwas_ss[, .(chr=CHR, pos_b37=POS, EA=A1, OA=A2, EAF, beta=Beta, beta_
 gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=280007)
 fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/EduYears_EUR_noUKB.txt.gz")
 
-##
-## Now onto GWASs that have harmonized summary statistics in the GWAS Catalog
-##
+#####################################################################################
+##                                                                                 ##
+## Now onto GWASs that have harmonized summary statistics in the GWAS Catalog      ##
+##                                                                                 ##
+#####################################################################################
 
 #####################################################################################
 # Filter the 58 MVP quantitative trait GWASs (PMID: 39024449)
@@ -639,7 +658,7 @@ for (this_prs in gwas_list[`PubMed ID` == 31217584 & is.na(Cases), PRS]) {
 }
 
 #######################################################################################
-# And the the 10 PAGE case/control GWAS (T2D) (PMID: 31217584)
+# And the 1 PAGE case/control GWAS (T2D) (PMID: 31217584)
 #######################################################################################
 this_gwas <- gwas_list[PRS == "T2D_PAGE"]
 gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
@@ -652,4 +671,23 @@ gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_
 
 gwas_ss <- filter_sumstats(gwas_ss, type="case/control")
 fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file="data/filtered_sumstats/filtered_gwas/T2D_PAGE.txt.gz")
+
+#######################################################################################
+# Filter the 10 MEGASTROKE case/control GWASs (PMID: 29531354)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 29531354, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  if (typeof(gwas_ss$p_value) != "numeric") gwas_ss[, p_value := as.numeric(p_value)] # sometimes loaded as character - all data clearly numeric - problematic rows
+
+  gwas_ss <- gwas_ss[hm_code < 14] # Some variants were not harmonizable 
+  gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
+                         beta_se=standard_error, neg_log10_p=-log10(p_value), EAF=hm_effect_allele_frequency)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_samples=this_gwas$Samples, total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
 
