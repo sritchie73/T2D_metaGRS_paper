@@ -301,4 +301,7 @@ wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90297001-GCST
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90296001-GCST90297000/GCST90296498/harmonised/GCST90296498.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018613/harmonised/34594039-GCST90018613-EFO_0003761.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018699/harmonised/34594039-GCST90018699-EFO_0000692.h.tsv.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90335001-GCST90336000/GCST90335165/harmonised/GCST90335165.h.tsv.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90335001-GCST90336000/GCST90335167/harmonised/GCST90335167.h.tsv.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90335001-GCST90336000/GCST90335163/harmonised/GCST90335163.h.tsv.gz
 

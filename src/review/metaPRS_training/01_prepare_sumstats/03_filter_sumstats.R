@@ -42,19 +42,13 @@ for (this_prs in gwas_list[PRS %like% "FinnGen" & is.na(Cases), PRS]) {
 }
 
 ##############################################################
-# Filter the 11 qunatitative CKB summary statistics
+# Filter the 8 quantitative CKB summary statistics
 ##############################################################
 for (this_prs in gwas_list[`GWAS catalog accession or other download source` %like% 'pheweb.ckbiobank.org' & is.na(Cases), PRS]) {
   this_gwas <- gwas_list[PRS == this_prs]
   this_pheno_fname <- this_gwas[, gsub(".* ", "", `GWAS catalog accession or other download source`)]
   gwas_ss <- fread(sprintf("data/gwas_summary_stats/CKB/phenocode-%s.tsv.gz", this_pheno_fname))
-  if ("chrom" %in% names(gwas_ss)) {
-		gwas_ss <- gwas_ss[,.(chr=chrom, pos_b38=pos, EA=alt, OA=ref, beta, beta_se=sebeta, neg_log10_p=-log10(pval), EAF=af)]
-  } else {
-    # SBP and PP have different column headings to other 9 traits for some reason
-    gwas_ss <- gwas_ss[,.(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
-                          neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
-  }
+	gwas_ss <- gwas_ss[,.(chr=chrom, pos_b38=pos, EA=alt, OA=ref, beta, beta_se=sebeta, neg_log10_p=-log10(pval), EAF=af)]
   gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 } 
@@ -728,6 +722,7 @@ for (this_prs in gwas_list[`PubMed ID` == 28887542, PRS]) {
 
   if (typeof(gwas_ss$p_value) != "numeric") gwas_ss[, p_value := as.numeric(p_value)] # sometimes loaded as character - all data clearly numeric - problematic rows
   gwas_ss <- gwas_ss[hm_code < 14] # Some variants were not harmonizable 
+  gwas_ss[is.na(hm_beta) & beta == 0, hm_beta := 0] # so that they're not dropped in the output
 
   gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
                          beta_se=standard_error, neg_log10_p=-log10(p_value))]
@@ -920,6 +915,22 @@ for (this_prs in gwas_list[`PubMed ID` == 24097068, PRS]) {
                            beta_se=standard_error, neg_log10_p=-log10(p_value), samples=n)]
 
   gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 3 CKB blood pressure GWASs (PMID: 38104120)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 39048560, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency, samples=N)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
 
