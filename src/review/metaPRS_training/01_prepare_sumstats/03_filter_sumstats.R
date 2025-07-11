@@ -691,3 +691,416 @@ for (this_prs in gwas_list[`PubMed ID` == 29531354, PRS]) {
   fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
 }
 
+#######################################################################################
+# Filter the 5 adiposity GWASs (PMID: 27918534)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 27918534, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  if (typeof(gwas_ss$p_value) != "numeric") gwas_ss[, p_value := as.numeric(p_value)] # sometimes loaded as character - all data clearly numeric - problematic rows
+  gwas_ss <- gwas_ss[hm_code < 14] # Some variants were not harmonizable 
+
+  # Only Z-score and P-value reported, so will require some post-hoc processing
+  # - We keep the Z-score as the beta column, so that its kept after matching to our candidate variant set
+  # - Because we need to use the 1000 Genomes allele frequencies to compute the beta and standard error
+  gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=z, beta_se=0, neg_log10_p=-log10(p_value), samples=n)] 
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  gwas_ss[varset, on = .(AoU_varID), EAF_1000G := i.EAF_1000G] # studies are all multiancestry (either EUR/AFR or EUR/AFR/AMR/EAS) so we just use overall 1000G MAFs
+  gwas_ss[, z := beta] # sign oriented based on oriented effect allele by filtered_sumstats()
+  gwas_ss[, beta := beta_from_zscore(z, EAF_1000G, n_eff)] # n_eff here is the per-SNP sample size
+  gwas_ss[, beta_se := se_from_zscore(z, EAF_1000G, n_eff)] # n_eff here is the per-SNP sample size
+  gwas_ss[, c("z", "EAF_1000G") := NULL] # drop no longer used columns
+
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 5 UKHLS blood test GWASs (PMID: 28887542)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 28887542, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  if (typeof(gwas_ss$p_value) != "numeric") gwas_ss[, p_value := as.numeric(p_value)] # sometimes loaded as character - all data clearly numeric - problematic rows
+  gwas_ss <- gwas_ss[hm_code < 14] # Some variants were not harmonizable 
+
+  gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
+                         beta_se=standard_error, neg_log10_p=-log10(p_value))]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 5 NMR lipid GWASs (PMID: 38448586)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 38448586, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  if (typeof(gwas_ss$p_value) != "numeric") gwas_ss[, p_value := as.numeric(p_value)] # sometimes loaded as character - all data clearly numeric - problematic rows
+
+
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 4 glycemic trait ExWASs (PMID: 39280063)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 39280063, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency, samples=sample_size)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 4 GWASs of glycemic traits in pregnancy (PMID: 38372780)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 38372780 & is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# And the GWAS for gestational diabetes (PMID: 38372780)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 38372780 & !is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_samples=this_gwas$Samples, total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 4 GWASs of glycemic traits in Africa (PMID: 40025146)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 40025146, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 4 HOMA-B/HOMA-IR GWASs from 2010 (PMID: 20081858)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 20081858, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  if ("hm_chrom" %in% names(gwas_ss)) { # European ancestry
+		gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
+													 beta_se=standard_error, neg_log10_p=-log10(p_value))]
+  } else { # Qatari
+		gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+													 neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+  }
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 4 Leptin ExWASs (PMID: 32917775)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 32917775, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+	gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
+	  											 beta_se=standard_error, neg_log10_p=-log10(p_value))]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 4 Lipid GWASs in Hispanic/Latinos (PMID: 40210677)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 40210677 & is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+	gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+												 neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)] # ignore 'n' column - does not match up with Catalog report or paper which are 6x larger
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# And the T2D GWAS in Hispanic/Latinos (PMID: 40210677)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 40210677 & !is.na(Cases), PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+	gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+												 neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_samples=this_gwas$Samples, total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 4 Lipid GWASs in Africa (PMID: 35546142)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 35546142, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
+                           beta_se=standard_error, neg_log10_p=-log10(p_value))]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 4 GLGC 2013 GWASs (PMID: 24097068)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 24097068, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  if (typeof(gwas_ss$p_value) != "numeric") gwas_ss[, p_value := as.numeric(p_value)] # sometimes loaded as character - all data clearly numeric - problematic rows
+
+  gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
+                           beta_se=standard_error, neg_log10_p=-log10(p_value), samples=n)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 3 Africa blood pressure GWASs (PMID: 38104120)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 38104120, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 2 insulin sensitivity index GWASs (PMID: 27416945) 
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 27416945, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
+                           beta_se=standard_error, neg_log10_p=-log10(p_value))]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 2 Leptin GWASs (PMID: 26833098)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 26833098, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
+                           beta_se=standard_error, neg_log10_p=-log10(p_value), samples=n)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the 2 Reproductive Health GWASs (PMID: 40069456)
+#######################################################################################
+for (this_prs in gwas_list[`PubMed ID` == 40069456, PRS]) {
+  this_gwas <- gwas_list[PRS == this_prs]
+  gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+  gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+  gwas_ss <- fread(gwas_fname)
+
+  gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                         neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+
+  gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+  fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+}
+
+#######################################################################################
+# Filter the Spracklen et al. T2D GWAS (PMID: 32499647)
+#######################################################################################
+this_prs <- "T2D_EastAsia"
+this_gwas <- gwas_list[PRS == this_prs]
+gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+gwas_ss <- fread(gwas_fname)
+gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
+   										 beta_se=standard_error, neg_log10_p=-log10(p_value))]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+
+#######################################################################################
+# Filter the GERA T2D GWAS (PMID: 33893285)
+#######################################################################################
+this_prs <- "T2D_GERA"
+this_gwas <- gwas_list[PRS == this_prs]
+gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+gwas_ss <- fread(gwas_fname)
+gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+											 neg_log10_p=-log10(p_value), EAF=freq_effect_allele)]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+
+#######################################################################################
+# Filter the Akiyama et al. BMI GWAS (PMID: 28892062)
+#######################################################################################
+this_prs <- "BMI_Japan"
+this_gwas <- gwas_list[PRS == this_prs]
+gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+gwas_ss <- fread(gwas_fname)
+gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta,
+                       beta_se=standard_error, neg_log10_p=-log10(p_value), EAF=hm_effect_allele_frequency)]
+gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+
+#######################################################################################
+# Filter the GIANT BMI GWAS (PMID: 25673413)
+#######################################################################################
+this_prs <- "BMI_GIANT_2015"
+this_gwas <- gwas_list[PRS == this_prs]
+gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+gwas_ss <- fread(gwas_fname)
+gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=effect_allele, OA=other_allele, beta, samples=n,
+                       beta_se=standard_error, neg_log10_p=-log10(p_value), EAF=eaf_ref)]
+gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+
+#######################################################################################
+# Filter the Lu et al. Body Fat % GWAS (PMID: 26833246)
+#######################################################################################
+this_prs <- "BodyFat_2016"
+this_gwas <- gwas_list[PRS == this_prs]
+gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+gwas_ss <- fread(gwas_fname)
+gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta, samples=n,
+                       beta_se=standard_error, neg_log10_p=-log10(p_value), EAF=hm_effect_allele_frequency)]
+gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+
+#######################################################################################
+# Filter the Nikpay et al. CAD GWAS (PMID: 26343387)
+#######################################################################################
+this_prs <- "CAD_2015"
+this_gwas <- gwas_list[PRS == this_prs]
+gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+gwas_ss <- fread(gwas_fname)
+gwas_ss <- gwas_ss[, .(chr=hm_chrom, pos_b38=hm_pos, EA=hm_effect_allele, OA=hm_other_allele, beta=hm_beta, 
+                       beta_se=standard_error, neg_log10_p=-log10(p_value), EAF=hm_effect_allele_frequency)]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+
+#######################################################################################
+# Filter the Tuemer et al. IGF1 GWAS (PMID: 27329260)
+#######################################################################################
+this_prs <- "IGF1_2016"
+this_gwas <- gwas_list[PRS == this_prs]
+gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+gwas_ss <- fread(gwas_fname)
+gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+											 neg_log10_p=-log10(p_value), EAF=effect_allele_frequency, samples=n)]
+gwas_ss <- filter_sumstats(gwas_ss, type="continuous")
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+
+#######################################################################################
+# Filter the Elliot et al. Gestational Diabetes GWAS (PMID: 38182742)
+#######################################################################################
+this_prs <- "GD_2024"
+this_gwas <- gwas_list[PRS == this_prs]
+gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+gwas_ss <- fread(gwas_fname)
+gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                       neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+gwas_ss <- filter_sumstats(gwas_ss, type="case/control", total_cases=this_gwas$Cases, total_controls=this_gwas$Controls)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+
+#######################################################################################
+# Filter the Chen et al. Educational Attainment GWAS (PMID: 38182883)
+#######################################################################################
+this_prs <- "EduYears_EAS"
+this_gwas <- gwas_list[PRS == this_prs]
+gcstid <- this_gwas[,`GWAS catalog accession or other download source`]
+gwas_fname <- list.files(pattern=gcstid, path="data/gwas_summary_stats/GWAS_Catalog/Harmonized/", full.names=TRUE)
+gwas_ss <- fread(gwas_fname)
+gwas_ss <- gwas_ss[, .(chr=chromosome, pos_b38=base_pair_location, EA=effect_allele, OA=other_allele, beta, beta_se=standard_error,
+                       neg_log10_p=-log10(p_value), EAF=effect_allele_frequency)]
+gwas_ss <- filter_sumstats(gwas_ss, type="continuous", total_samples=this_gwas$Samples)
+fwrite(gwas_ss, sep="\t", quote=FALSE, compress="gzip", file=sprintf("data/filtered_sumstats/filtered_gwas/%s.txt.gz", this_prs))
+
