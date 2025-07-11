@@ -45,16 +45,8 @@ wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90002001-GCST
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90002001-GCST90003000/GCST90002236/harmonised/34059833-GCST90002236-EFO_0004467.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90256001-GCST90257000/GCST90256414/harmonised/GCST90256414.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90503001-GCST90504000/GCST90503331/harmonised/GCST90503331.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90267001-GCST90268000/GCST90267574/harmonised/GCST90267574.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90267001-GCST90268000/GCST90267578/harmonised/GCST90267578.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST005001-GCST006000/GCST005178/harmonised/27416945-GCST005178-EFO_0004471.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90267001-GCST90268000/GCST90267573/harmonised/GCST90267573.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90267001-GCST90268000/GCST90267577/harmonised/GCST90267577.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST003001-GCST004000/GCST003658/harmonised/27416945-GCST003658-EFO_0004471.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90267001-GCST90268000/GCST90267568/harmonised/GCST90267568.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90267001-GCST90268000/GCST90267572/harmonised/GCST90267572.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90267001-GCST90268000/GCST90267567/harmonised/GCST90267567.h.tsv.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90267001-GCST90268000/GCST90267571/harmonised/GCST90267571.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90475001-GCST90476000/GCST90475094/harmonised/GCST90475094.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90475001-GCST90476000/GCST90475093/harmonised/GCST90475093.h.tsv.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90475001-GCST90476000/GCST90475092/harmonised/GCST90475092.h.tsv.gz
