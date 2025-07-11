@@ -29,6 +29,16 @@ se_from_ci <- function(beta, L95, U95) {
   (se_from_L95 + se_from_U95)/2 # as either limit can give slightly different se
 }
 
+# Or from Z scores
+# See https://www.nature.com/articles/ng.3538
+beta_from_zscore <- function(z, EAF, samples) {
+  z / sqrt(2*EAF*(1 - EAF)*(samples + z^2))
+}
+
+se_from_zscore <- function(z, EAF, samples) {
+  1 / sqrt(2*EAF*(1 - EAF)*(samples + z^2))
+}
+
 # Correction of BOLT-LMM beta and se for case %
 # https://alkesgroup.broadinstitute.org/BOLT-LMM/BOLT-LMM_manual.html#x1-470008
 bolt_lmm_fix <- function(x, cases, controls) {
