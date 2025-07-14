@@ -52,8 +52,8 @@ vars_hapmap <- vars_hapmap[, .(chr, rsid_b36=rsid, pos_b36=pos, pos_b37,
 
 # Some of the GWAS we are building GRS from are exclusively EXOME GWAS, so it also makes 
 # sense to try and include common exome variants even if those were not part of HapMap3.
-ex1 <- fread("data/gwas_summary_stats/Leptin/GCST90007310_buildGRCh37.tsv.gz")
-ex2 <- fread("data/gwas_summary_stats/T2D_Exome/29632382-GCST007515-EFO_0001360-build37.f.tsv.gz")
+ex1 <- fread("data/filtered_sumstats/exome_snps/GCST90007310_buildGRCh37.tsv.gz")
+ex2 <- fread("data/filtered_sumstats/exome_snps/29632382-GCST007515-EFO_0001360-build37.f.tsv.gz")
 
 exome <- unique(rbind(
   ex1[, .(chr=chromosome, pos=base_pair_location)],
