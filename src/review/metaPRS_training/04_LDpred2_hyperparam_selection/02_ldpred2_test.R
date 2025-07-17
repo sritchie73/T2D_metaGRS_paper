@@ -21,7 +21,10 @@ pheno <- pheno[(metaPRS_train_samples)]
 candidate_prs <- fread(sprintf("output/ldpred2/all_hyperparam_grs_lvls/%s/%s/collated_scores.sscore.gz", ancestry, gwas))
 
 # Filter to metaPRS training cohort samples
-candidate_prs <- candidate_prs[IID %in% pheno$sample_id]
+candidate_prs <- candidate_prs[IID %in% pheno$person_id]
+
+# Restrict phenotype data to people with genetics
+pheno <- pheno[person_id %in% candidate_prs$IID]
 
 # identify "bad" chains for auto model (see LDpred2 tutorial) - must be done prior to correction for PCs
 candidate_prs <- melt(candidate_prs, id.vars="IID", variable.name="score")
