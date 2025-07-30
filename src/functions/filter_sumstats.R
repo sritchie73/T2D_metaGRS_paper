@@ -60,7 +60,7 @@ if (!exists("varset")) {
 filter_sumstats <- function(gwas_ss, type, total_samples, total_cases, total_controls) {
   # Get chromosome and position if missing
   if ("rsid" %in% names(gwas_ss)) {
-    gwas_ss[varset, on = .(rsid=rsid_1000G), c("chr", "pos_b38") := .(i.chr, i.pos_b38)]
+    gwas_ss[varset, on = .(rsid=rsid_AoU), c("chr", "pos_b38") := .(i.chr, i.pos_b38)]
     gwas_ss <- gwas_ss[!is.na(chr) & !is.na(pos_b38)]
     gwas_ss[, rsid := NULL]
   }
@@ -132,7 +132,7 @@ filter_sumstats <- function(gwas_ss, type, total_samples, total_cases, total_con
   # In these cases we need to (1) flip the strand of the alleles, and (2) reverse the orientation
   # of effect/other alleles. This (1) basically means we don't have to change the 'EA' and 'OA'
   # columns because the two operations cancel out, but (2) we have to flip the 'beta' and 'EAF'
-  gwas_ss[varset, on=.(chr, pos_b38), EAF_AoU := EUR_EAF_AoU] # Note, variants filtered so all ancestries have same MAF direction
+  gwas_ss[varset, on=.(chr, pos_b38), EAF_AoU := EAF_EUR_AoU] # Note, variants filtered so all ancestries have same MAF direction
   gwas_ss[EA == flip_strand(OA) & ( (EAF < 0.5 & EAF_AoU > 0.5) | (EAF > 0.5 & EAF_AoU < 0.5) ),
           c("beta", "EAF", "flipped") := .(-beta, 1-EAF, !flipped)]
 
