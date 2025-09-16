@@ -26,31 +26,6 @@ candidate_prs <- candidate_prs[IID %in% pheno$person_id]
 # Restrict phenotype data to people with genetics
 pheno <- pheno[person_id %in% candidate_prs$IID]
 
-# identify "bad" chains for auto model (see LDpred2 tutorial) - must be done prior to correction for PCs
-candidate_prs <- melt(candidate_prs, id.vars="IID", variable.name="score")
-auto_chains <- candidate_prs[score %like% "auto_[0-9]*$",.(sc=sd(value)),by=score]
-auto_chains[, keep := abs(sc - median(sc)) < 3 * mad(sc)]
-fwrite(auto_chains, sep="\t", quote=FALSE, sprintf("%s/ldpred2_auto_chain_qc.txt", outdir))
-
-if (auto_chains[(keep), .N] > 0) {
-	# Determine auto final model
-	auto_final <- candidate_prs[score %in% auto_chains[(keep), score], .(score="auto", value=mean(value)), by=IID]
-  fwrite(auto_final, sep="\t", quote=FALSE, compress="gzip", file=sprintf("%s/ldpred2_auto_model_prs.txt.gz", outdir))
-
-  # add to table of candidate optimal PRSs
-	candidate_prs <- rbind(candidate_prs, auto_final)
-
-	# Get variant weights for new auto final score
-	varweights <- fread(sprintf("output/ldpred2/train/%s/%s/ldpred2_pgs_varweights.txt.gz", ancestry, gwas),
-											select=c("AoU_varID", "chr", "pos", "effect_allele", "other_allele", auto_chains[(keep), score]))
-	varweights <- melt(varweights, id.vars=c("AoU_varID", "chr", "pos", "effect_allele", "other_allele"))
-	varweights <- varweights[, .(auto=mean(value)), by=c("AoU_varID", "chr", "pos", "effect_allele", "other_allele")]
-	fwrite(varweights, sep="\t", quote=FALSE, compress="gzip", file=sprintf("%s/ldpred2_auto_model_varweights.txt.gz", outdir))
-}
-
-# Now that the LDpred2 auto model has been derived, we can drop the individual chains
-candidate_prs <- candidate_prs[!(score %like% "auto_[0-9]*$")] # only "auto" should be left
-
 # Test each candidate PRS for association with T2D
 prs_assocs <- foreach(this_prs = unique(candidate_prs$score), .combine=rbind) %do% { 
 	# Add specific PRS to phenotype data for testing
@@ -70,43 +45,45 @@ fwrite(prs_assocs, sep="\t", quote=FALSE, file=sprintf("%s/all_model_performance
 # Generate diagnostic plots
 cat("Generating diagnositic plots...\n")
 
-# Load LDpred2 grid model parameters
-traindir <- sprintf("output/ldpred2/train/%s/%s", ancestry, gwas)
-params <- fread(sprintf("%s/grid_model_parameters.txt", traindir))
-params[, paramset := .I]
+if (any(unique(candidate_prs$score) %like% "grid")) { # grid model missing where h2_est < 0
+	# Load LDpred2 grid model parameters
+	traindir <- sprintf("output/ldpred2/train/%s/%s", ancestry, gwas)
+	params <- fread(sprintf("%s/grid_model_parameters.txt", traindir))
+	params[, paramset := .I]
 
-# Plot performance against grid parameters
-grid_perf <- prs_assocs[LDpred2_model %like% "grid_" & coefficient == "PRS"]
-grid_perf[, paramset := as.integer(gsub("grid_", "", LDpred2_model))]
-grid_perf <- merge(prs_assocs, params, by="paramset", all.x=TRUE)
+	# Plot performance against grid parameters
+	grid_perf <- prs_assocs[LDpred2_model %like% "grid_" & coefficient == "PRS"]
+	grid_perf[, paramset := as.integer(gsub("grid_", "", LDpred2_model))]
+	grid_perf <- merge(prs_assocs, params, by="paramset", all.x=TRUE)
 
-g1 <- ggplot(grid_perf) + 
-	aes(x=grid_param_p, y=AUC, ymin=AUC.L95, ymax=AUC.U95, color=as.factor(grid_param_h2)) +
-	theme_bigstatsr() +
-	geom_errorbar(width=0, alpha=0.5) +
-	geom_point() +
-	geom_line() + 
-	scale_x_log10(breaks = 10^(-5:0), minor_breaks = params$p) +
-	facet_wrap(~ grid_param_sparse, labeller = label_both) +
-	labs(y = "AUC (95% CI)", color = "h2") +
-	theme_bw() +
-	theme(legend.position = "top", panel.spacing = unit(1, "lines"))
+	g1 <- ggplot(grid_perf) + 
+		aes(x=grid_param_p, y=AUC, ymin=AUC.L95, ymax=AUC.U95, color=as.factor(grid_param_h2)) +
+		theme_bigstatsr() +
+		geom_errorbar(width=0, alpha=0.5) +
+		geom_point() +
+		geom_line() + 
+		scale_x_log10(breaks = 10^(-5:0), minor_breaks = params$p) +
+		facet_wrap(~ grid_param_sparse, labeller = label_both) +
+		labs(y = "AUC (95% CI)", color = "h2") +
+		theme_bw() +
+		theme(legend.position = "top", panel.spacing = unit(1, "lines"))
 
-g2 <- ggplot(grid_perf) +
-	aes(x=grid_param_p, y=OR, ymin=OR.L95, ymax=OR.U95, color=as.factor(grid_param_h2)) +
-	theme_bigstatsr() +
-	geom_hline(yintercept=1, linetype=2) +
-	geom_errorbar(width=0, alpha=0.5) +
-	geom_point() +
-	geom_line() +
-	scale_x_log10(breaks = 10^(-5:0), minor_breaks = params$p) +
-	facet_wrap(~ grid_param_sparse, labeller = label_both) +
-	labs(y = "OR (95% CI)", color = "h2") +
-	theme_bw() +
-	theme(legend.position = "top", panel.spacing = unit(1, "lines"))
+	g2 <- ggplot(grid_perf) +
+		aes(x=grid_param_p, y=OR, ymin=OR.L95, ymax=OR.U95, color=as.factor(grid_param_h2)) +
+		theme_bigstatsr() +
+		geom_hline(yintercept=1, linetype=2) +
+		geom_errorbar(width=0, alpha=0.5) +
+		geom_point() +
+		geom_line() +
+		scale_x_log10(breaks = 10^(-5:0), minor_breaks = params$p) +
+		facet_wrap(~ grid_param_sparse, labeller = label_both) +
+		labs(y = "OR (95% CI)", color = "h2") +
+		theme_bw() +
+		theme(legend.position = "top", panel.spacing = unit(1, "lines"))
 
-g <- plot_grid(g1, g2, nrow = 2)
-ggsave(g, width=7.2, height=7.2, units="in", file=sprintf("%s/grid_parameter_performance.png", outdir))
+	g <- plot_grid(g1, g2, nrow = 2)
+	ggsave(g, width=7.2, height=7.2, units="in", file=sprintf("%s/grid_parameter_performance.png", outdir))
+}
 
 # Get lasso parameters
 params <- fread(sprintf("output/ldpred2/train/%s/lassosum2_model_parameters.txt", traindir))
