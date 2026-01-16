@@ -23,9 +23,10 @@ for (sf in scores) {
       
   # Reformat and add weights
   weights <- fread(sf)
+  weights <- weights[!is.na(weight) & weight != 0]
   weights <- weights[, .(chr_name=chr, chr_position=pos, effect_allele, 
     other_allele, effect_weight=weight)]
-  write.table(weights, sep="\t", quote=FALSE, file=out_file, append=TRUE)
+  write.table(weights, sep="\t", quote=FALSE, file=out_file, append=TRUE, row.names=FALSE)
   
   # gzip
   gzip(out_file)
