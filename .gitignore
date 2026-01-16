@@ -8,3 +8,5 @@ src/PGS_resources/
 TODO
 .Rproj.user/
 *.Rproj
+.DS_Store
+AoU_training/
