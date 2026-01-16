@@ -6,3 +6,5 @@ tmp/
 output/
 src/PGS_resources/
 TODO
+.Rproj.user/
+*.Rproj
