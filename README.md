@@ -4,20 +4,47 @@ This repository houses and documents the code used to generate the results in th
 
 ## Repository information
 
-The purpose of this repository is to provide a public record of the source code (i.e. methods) used for the entitled manuscript. The source code provided in this repository has not been designed to regenerate the results as-is for third-parties. The scripts herein contain numerous hard-coded filepaths and rely on data that cannot be made publicly available through this repository. 
+The purpose of this repository is to provide a public record of the source code (i.e. methods) used for the entitled manuscript. Importantly, the source code provided in this repository has not been designed to regenerate the results as-is for third-parties. The scripts herein contain numerous hard-coded filepaths and rely on data that cannot be made publicly available through this repository and also could not be analysed in a single location, as each dataset had to be analysed within its own dedicated trusted research environments, each with their own organisational quirks and dramatically different compute configurations and by different analysts with their own coding practices and levels of experience. 
 
-The analysis scripts used to generate the results in our paper are contained in the `src/` folder. The `ext_src/` folder contains additional scripts primarily used for extraction and curation of UK Biobank and other data used for this project. This delineation has been made for pragmatic purposes: the scripts stored in `ext_src/` are copies of scripts located elsewhere on our HPC cluster as they have been written for cross-project purposes (see `ext_src/README.txt` for details).
+## Compute systems used
+
+The following compute systems were used for this project:
+
+ (1) The Cambridge Service for Data Driven Discovery (CSD3) high performance computing (HPC) cluster: https://docs.hpc.cam.ac.uk/hpc/index.html
+ (2) The All of Us (AoU) Research Platform : https://www.researchallofus.org/data-tools/workbench/
+ (3) The UK Biobank Research Analysis Platform (UKB RAP): https://dnanexus.gitbook.io/uk-biobank-rap
+ (4) The National University of Singapore High Performance Computing Facility (NUS HPC): https://research.nus.edu.sg/research-facilities/project/central-high-performance-computing-facility/
+ (5) Local compute
+ 
+CSD3 was used to prepare GWAS summary statistics for T2D multiancestry metaPRS training and for running analysis on the INTERVAL cohort. In the original preprint, CSD3 was also used to analyse the UK Biobank cohort (before use of the RAP was mandated) and to generate tables and figures.
+ 
+The AoU Research Platform was used for all analyses of the All of Us cohort, which included multi-ancestry metaPRS training and initial validation and comparison to other published PRSs in independent samples not used for metaPRS training.
+
+The UKB RAP was used for all analyses of the UK Biobank cohort, which included independent replication of multi-ancestry metaPRS performance, comparison to published PRSs, and assessing benefits for screening and 10-year risk prediction in comparison to the QDiabetes risk score.
+
+Local compute was used to collate summary statistics and prepare tables and figures for publication, as well as manuscript drafting.
+
+## Repository Organisation
+
+Code in this repository lacks a coherent centralized organisation in part due to the different architectures of compute systems involved, long running and evolving nature of the project, independent analysts involved, and presence of dataset QC and processing pipelines across many independent projects.
+
+Broadly speaking, the logical ordering of the source code (in terms of analysis sequence) is as follows:
+
+ (1) Code for downloading GWAS summary statistics used as inputs for the multiancestry metaPRS training can be found under `data/gwas_summary_statistics/`. Note some GWAS summary statistics required manual rather than automated download; see Table S14 in the manuscript for further details.
+ 
+ (2) Code for filtering and harmonizing the GWAS summary statistics for the multiancestry metaPRS training can be found under `src/prepare_sumstats/`
+ 
+ (3) Code for metaPRS training can be found in `src/metaPRS_training/`
 
 ## Software and versions used
 
 The following software and versions were used to run these scripts:
 
+### CSD3
+
 - Rocky Linux release 8.10 (Green Obsidian) (HPC operating system)
 - Slurm version 23.02.07 (HPC queue manager and job submission system)
 - GNU bash version 4.4.20(1) (shell environment)
-- docopts v0.6.41 commit ccd24b6 (part of some of the commandline tools in `ext_src/`) 
-- PLINK v2.00a5.7LM AVX2 Intel (30 Oct 2023) (www.cog-genomics.org/plink/2.0/), aliased as plink2 (used to curate UKB genotype data and calculate PRS)
-- UKBiobank ukbconv_lx (c) CTSU. Compiled Mar 14 2018 (Used for converting UK Biobank data to csv)
 - R version 4.3.1 (2023-06-16), along with the R packages:
   - Data wrangling:
     - data.table version 1.14.8
