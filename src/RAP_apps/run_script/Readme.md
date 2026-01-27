@@ -54,8 +54,9 @@ dx run run_script -iscript='job.sh' -ienv='SLURM_ARRAY_JOB_ID=1' -ienv='SLURM_CP
 # passed to the run_script app; but you can use the --batch-tsv function to also
 # vary other input arguments (e.g. to run jobs with different named or positional 
 # arguments)
+echo -e "Batch ID\tenv" > env_batch.tsv
 for chr in {1..22}; do
-  echo "-ienv=\"SLURM_ARRAY_JOB_ID=$chr\"" >> env_batch.tsv
+  echo -e "chr_$chr\tSLURM_ARRAY_JOB_ID=$chr >> env_batch.tsv
 done
 dx run run_script -iscript='job.sh' --batch-tsv env_batch.tsv 
 ```
