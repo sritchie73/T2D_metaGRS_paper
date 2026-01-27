@@ -1,0 +1,72 @@
+{
+  "name": "run_script",
+  "title": "Run a script",
+  "summary": "Run a script on a cloud workstation",
+  "dxapi": "1.0.0",
+  "version": "1.0.0",
+  "inputSpec": [
+    {
+      "name": "script",
+      "label": "Path to script to run on project storage",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "cmd",
+      "label": "(Optional) Command and arguments used to launch the script",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "env",
+      "label": "(Optional) Additional environment variables to set before running the script",
+      "class": "array:string",
+      "optional": true,
+      "help": ""
+    }
+  ],
+  "outputSpec": [],
+  "runSpec": {
+    "interpreter": "bash",
+    "file": "src/run_script.sh",
+    "distribution": "Ubuntu",
+    "release": "24.04",
+    "version": "0",
+    "execDepends": [
+      {"name": "default-jre"},
+      {"name": "libssl-dev"},
+      {"name": "libxml2-dev"},
+      {"name": "libfontconfig1-dev"},
+      {"name": "libharfbuzz-dev"},
+      {"name": "libfribidi-dev"},
+      {"name": "libtiff5-dev"},
+      {"name": "libgmp-dev"},
+      {"name": "libcairo2-dev"},
+      {"name": "libudunits2-dev"},
+      {"name": "libgdal-dev"},
+      {"name": "libmpfr-dev"},
+      {"name": "jags"}
+    ]  
+  },
+  "access": {
+    "network": [
+      "*"
+    ],
+    "project": "CONTRIBUTE"
+  },
+  "regionalOptions": {
+    "aws:eu-west-2": {
+      "systemRequirements": {
+        "*": {
+          "instanceType": "mem1_ssd1_v2_x4"
+        }
+      }
+    }
+  },
+  "ignoreReuse": true
+}

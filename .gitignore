@@ -10,3 +10,7 @@ TODO
 *.Rproj
 .DS_Store
 AoU_training/
+bin/
+lib/
+pgsc_calc_logs/
+.Rhistory

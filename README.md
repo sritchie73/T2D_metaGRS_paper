@@ -35,6 +35,8 @@ Broadly speaking, the logical ordering of the source code (in terms of analysis 
  (2) Code for filtering and harmonizing the GWAS summary statistics for the multiancestry metaPRS training can be found under `src/prepare_sumstats/`
  
  (3) Code for metaPRS training can be found in `src/metaPRS_training/`
+ 
+ 
 
 ## Software and versions used
 
