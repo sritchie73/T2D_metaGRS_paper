@@ -42,6 +42,11 @@ Broadly speaking, the logical ordering of the source code (in terms of analysis 
 
 The following software and versions were used to run these scripts:
 
+### UKB Research Analysis Platform
+
+- The run_script applet for running scripts as jobs (https://github.com/sritchie73/dxapplet-run_script)
+- The dxutils R package providing extensions that enhance the DNAnexus command line utilities (https://github.com/sritchie73/dxutils)
+
 ### CSD3
 
 - Rocky Linux release 8.10 (Green Obsidian) (HPC operating system)

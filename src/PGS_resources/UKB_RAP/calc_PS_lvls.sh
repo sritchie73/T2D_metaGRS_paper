@@ -95,7 +95,8 @@ Options:
                               and logs shared across all scores for the duration of the run. The 
                               default is to store this in a directory called 'work/' in the folder 
                               in which the input --score-file is scored, then all logs will be copied 
-                              to each score output folder under 'logs/' at the end of the run. [default: NULL]
+                              to each score output folder under 'checkpointing/' at the end of the 
+                              run. [default: NULL]
   --genotype-prefix <prefix>  Path and prefix occurring before the chromosome number for the genotype
                               data on RAP project storage you want to use for polygenic scoring.
                               Defaults to the plink2 binary files extracted for the TopMed imputation
@@ -149,7 +150,7 @@ dx_ls_exists () {
 # Check for logging/working directory
 if [[ $work = "NULL" ]]; then
   indir=$(dirname $score_file)
-  work=$indir/logs
+  work=$indir/checkpointing
 fi
 if [[ dx_ls_exists $work ]]; then
   echo "Working directory $work already exists. Overwrite? (y/n)" 1>&2
@@ -221,7 +222,7 @@ cmd_string=${cmd[@]}
 
 # Create array job
 echo -e "Batch ID\tenv" > task_batches.tsv
-for task_id in {1..26}; do
+for task_id in {1..23}; do
   echo -e "$task_id\tSLURM_ARRAY_JOB_ID=$task_id" >> task_batches.tsv
 done
 
@@ -233,6 +234,7 @@ dx run run_script \
  -ienv="SLURM_ARRAY_TASK_MAX=26" \
  --instance-type="$instance_type" \
  --priority="$priority" \
+ --allow-ssh \
  --brief --yes 
 
 rm task_batches.tsv
