@@ -11,3 +11,6 @@ pgscatalog-download --efo MONDO_0005148 --build GRCh38 --outdir PGS_Catalog/MOND
 # brew install dxpy
 dx mkdir -p PGS_Catalog/MONDO_0005148/
 dx upload PGS_Catalog/MONDO_0005148/* --destination PGS_Catalog/MONDO_0005148/
+
+# No need to keep local copy
+rm -rf PGS_Catalog
