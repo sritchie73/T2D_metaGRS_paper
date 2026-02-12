@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
 # Requires docopts in your $PATH; download at https://github.com/docopt/docopts
+# Also requires R with dxutils (https://github.com/sritchie73/dxutils) installed
 
 # Location on RAP project storage where this and the calc_PS_lvls.R script are
 # located
@@ -134,6 +135,7 @@ Options:
   --instance-type             Instance type to use for each of the 26 parallel jobs (1 per chromosome) 
                               submitted via dx run run_script [default: mem2_ssd1_v2_x8]
   --priority                  Priority for the job submitted by dx run run_script [default: low]
+EOF
 )"
 
 # Check type switch
@@ -142,22 +144,18 @@ if ! [[ $type = 's' || $type = 'd' || $type = 'l' ]]; then
   exit 1
 fi
 
-dx_ls_exists () {
-  dx ls $1 &> /dev/null
-  return $?
-}
 
 # Check for logging/working directory
 if [[ $work = "NULL" ]]; then
   indir=$(dirname $score_file)
   work=$indir/checkpointing
 fi
-if [[ dx_ls_exists $work ]]; then
+if [[ $(Rscript -e "dxutils::dx_exists('"$work"')") = "[1] TRUE" ]]; then
   echo "Working directory $work already exists. Overwrite? (y/n)" 1>&2
   read ans
   while true; do
     if [[ $ans = "y" || $ans = "Y" || $ans = "Yes" || $ans = "YES" || $ans = "yes" ]]; then
-      dx rm -rf $work
+      Rscript -e "dxutils::dx_rm('"$work"')"
       if [[ $? -ne 0 ]]; then
         exit 1
       fi
@@ -170,7 +168,6 @@ if [[ dx_ls_exists $work ]]; then
     fi
   done
 fi
-dx mkdir -p $work/slurm_logs
 if [[ $? -ne 0 ]]; then
   exit 1
 fi
@@ -183,11 +180,11 @@ echo "Batch command:" > command_log.txt
 echo "------------------------------------------------------------------------" >> command_log.txt
 echo "$src_dir/calc_PS_lvls.sh $arg_string" >> command_log.txt
 echo "" >> command_log.txt
-dx upload command_log.txt --destination $work
+Rscript -e "dxutils::dx_upload('command_log.txt', '"$work"/')"
 rm command_log.txt
 
 # Copy across this script file
-dx upload $src_dir/calc_PS_lvls.sh --destination $work
+Rscript -e "dxutils::dx_upload('"$src_dir"/calc_PS_lvls.sh', '"$work"/')"
 
 # build command string
 cmd[0]="Rscript --vanilla $src_dir/calc_PS_lvls.R"
@@ -231,7 +228,7 @@ dx run run_script \
  --batch-tsv="task_batches.tsv" \
  -iscript="$src_dir/calc_PS_lvls.R" \
  -icmd="$cmd_string" \
- -ienv="SLURM_ARRAY_TASK_MAX=26" \
+ -ienv="SLURM_ARRAY_TASK_MAX=23" \
  --instance-type="$instance_type" \
  --priority="$priority" \
  --allow-ssh \
