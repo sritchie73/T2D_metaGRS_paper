@@ -5,7 +5,7 @@
 
 # Location on RAP project storage where this and the calc_PS_lvls.R script are
 # located
-src_dir=src/PGS_resources/UKB_RAP/
+src_dir=src/PGS_resources/UKB_RAP
 
 eval "$(docopts -h - : "$@" <<EOF
 Calculate the levels of a polygenic score in UK Biobank on the RAP
@@ -81,7 +81,7 @@ Options:
                               genotype data by the rsid column instead of by chromosome and
                               position when all three columns are provided.
   --cohort-name <name>        Name of the group of samples, used to name the output file name
-                              and folder (if --out not provided). [default: UKBv3]
+                              and folder (if --out not provided). [default: UKB_TopMed]
   --out <directory>           Directory on RAP project storage to save the final results to. By default, 
                               the results are stored in a folder named <--cohort-name>_sample_levels/ 
                               in the same directory as each input --score-file. If multiple score files 
@@ -109,7 +109,7 @@ Options:
                               multiple chromosomes. In this case, you can ignore the --genotype-suffix argument.
   --genotype-format <format>  Format the genotype data is stored in, must correspond to one of the arguments to
                               plink, e.g. the default, 'pfile' is passed directly to plink as '--pfile'. To use
-                              plink version 1 binary data (bed/bim/fam) set this as 'bfile'. [default: 'pfile']
+                              plink version 1 binary data (bed/bim/fam) set this as 'bfile'. [default: pfile]
   --keep <file>               Optional, path to file on RAP project storage to pass to plink2 --keep to subset 
                               to a given set of samples when calculating the polygenic score levels. [default: NULL]
   --keep-ambiguous            Flag to force the program to keep variants with ambiguous alleles,
@@ -132,9 +132,9 @@ Options:
   --remove-multiallelic       Flag that controls whether multi-allelic variants are kept or not. If given,
                               variants that have > 2 alleles in either the score file or genotype data are
                               discarded.
-  --instance-type             Instance type to use for each of the 26 parallel jobs (1 per chromosome) 
+  --instance-type <name>      Instance type to use for each of the 26 parallel jobs (1 per chromosome) 
                               submitted via dx run run_script [default: mem2_ssd1_v2_x8]
-  --priority                  Priority for the job submitted by dx run run_script [default: low]
+  --priority <type>           Priority for the job submitted by dx run run_script [default: high]
 EOF
 )"
 
@@ -148,10 +148,17 @@ fi
 # Check for logging/working directory
 if [[ $work = "NULL" ]]; then
   indir=$(dirname $score_file)
-  work=$indir/checkpointing
+  if [[ $indir = "." ]]; then
+    work=checkpointing/
+  else 
+    work=$indir/checkpointing/
+  fi
+fi
+if [[ $work != */ ]]; then
+  work=$work/
 fi
 if [[ $(Rscript -e "dxutils::dx_exists('"$work"')") = "[1] TRUE" ]]; then
-  echo "Working directory $work already exists. Overwrite? (y/n)" 1>&2
+  echo "Working directory $work already exists on RAP project storage. Overwrite? (y/n)" 1>&2
   read ans
   while true; do
     if [[ $ans = "y" || $ans = "Y" || $ans = "Yes" || $ans = "YES" || $ans = "yes" ]]; then
@@ -180,14 +187,14 @@ echo "Batch command:" > command_log.txt
 echo "------------------------------------------------------------------------" >> command_log.txt
 echo "$src_dir/calc_PS_lvls.sh $arg_string" >> command_log.txt
 echo "" >> command_log.txt
-Rscript -e "dxutils::dx_upload('command_log.txt', '"$work"/')"
+Rscript -e "dxutils::dx_upload('command_log.txt', '"$work"')"
 rm command_log.txt
 
 # Copy across this script file
-Rscript -e "dxutils::dx_upload('"$src_dir"/calc_PS_lvls.sh', '"$work"/')"
+Rscript -e "dxutils::dx_upload('"$src_dir"/calc_PS_lvls.sh', '"$work"')"
 
 # build command string
-cmd[0]="Rscript --vanilla $src_dir/calc_PS_lvls.R"
+cmd[0]="Rscript calc_PS_lvls.R"
 cmd[1]="--score-file $score_file"
 cmd[3]="--work $work"
 cmd[4]="--type $type"
@@ -218,20 +225,15 @@ if $remove_multiallelic; then  cmd[27]="--remove-multiallelic"; fi
 cmd_string=${cmd[@]}
 
 # Create array job
-echo -e "Batch ID\tenv" > task_batches.tsv
 for task_id in {1..23}; do
-  echo -e "$task_id\tSLURM_ARRAY_JOB_ID=$task_id" >> task_batches.tsv
+  job_id=$(dx run run_script \
+    --name "Calculate PGS, chromosome $task_id" \
+    -iscript="$src_dir/calc_PS_lvls.R" \
+    -icmd="$cmd_string" \
+    -ienv="SLURM_ARRAY_TASK_MAX=23" \
+    -ienv="SLURM_ARRAY_TASK_ID=$task_id" \
+    --instance-type="$instance_type" \
+    --priority="$priority" \
+    --brief --yes --allow-ssh)
+  echo "Job to calculate PGS on chromosome $task_id submitted with DNAnexus job ID: $job_id"
 done
-
-dx run run_script \
- --name "calc_PS_lvls" \
- --batch-tsv="task_batches.tsv" \
- -iscript="$src_dir/calc_PS_lvls.R" \
- -icmd="$cmd_string" \
- -ienv="SLURM_ARRAY_TASK_MAX=23" \
- --instance-type="$instance_type" \
- --priority="$priority" \
- --allow-ssh \
- --brief --yes 
-
-rm task_batches.tsv
