@@ -1,5 +1,6 @@
 library(data.table)
 library(R.utils)
+library(dxutils) # remotes::install_github("sritchie73/dxutils")
 
 # Get list of score files to convert to PGS Catalog format
 scores <- list.files(path="AoU_training/metaPRS_training", pattern="*.txt.gz", 
@@ -31,3 +32,6 @@ for (sf in scores) {
   # gzip
   gzip(out_file)
 }
+
+# Upload to DNAnexus project storage 
+dx_upload("AoU_training/metaPRS_training/", "PRS_score_files/")
