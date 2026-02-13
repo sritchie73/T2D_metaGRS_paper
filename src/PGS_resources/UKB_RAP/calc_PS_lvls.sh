@@ -134,7 +134,7 @@ Options:
                               discarded.
   --instance-type <name>      Instance type to use for each of the 26 parallel jobs (1 per chromosome) 
                               submitted via dx run run_script [default: mem2_ssd1_v2_x8]
-  --priority <type>           Priority for the job submitted by dx run run_script [default: high]
+  --priority <type>           Priority for the job submitted by dx run run_script [default: low]
 EOF
 )"
 
@@ -234,6 +234,6 @@ for task_id in {1..23}; do
     -ienv="SLURM_ARRAY_TASK_ID=$task_id" \
     --instance-type="$instance_type" \
     --priority="$priority" \
-    --brief --yes --allow-ssh)
+    --brief --yes)
   echo "Job to calculate PGS on chromosome $task_id submitted with DNAnexus job ID: $job_id"
 done
