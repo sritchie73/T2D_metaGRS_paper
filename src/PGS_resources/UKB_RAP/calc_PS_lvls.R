@@ -1076,7 +1076,7 @@ if (checkpoint < 2) {
 
   plink_input_info <- data.table()
   if ("is_dom" %in% names(scores)) {
-    dominant <- score[(is_dom)]
+    dominant <- scores[(is_dom)]
     scores <- scores[!(is_dom)]
   
     if (nrow(dominant) > 0) {
@@ -1088,7 +1088,7 @@ if (checkpoint < 2) {
   }
 
   if ("is_rec" %in% names(scores)) {
-    recessive <- score[(is_rec)]
+    recessive <- scores[(is_rec)]
     scores <- scores[!(is_rec)]
   
     if (nrow(recessive) > 0) {
@@ -1098,7 +1098,6 @@ if (checkpoint < 2) {
   
     rm(recessive)
   }
-
 
   if (nrow(scores) > 0) {
     plink_input_info <- rbind(fill=TRUE, plink_input_info, 
