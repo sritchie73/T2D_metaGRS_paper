@@ -169,24 +169,38 @@ if [[ $(Rscript -e "dxutils::dx_exists('"$work"')") = "[1] TRUE" ]]; then
       break
     elif [[ $ans = "n" || $ans = "N" || $ans = "No" || $ans = "NO" || $ans = "no" ]]; then
       echo "Resume from existing checkpointing data in $work? (y/n)"
+      read ans
       while true; do
         if [[ $ans = "y" || $ans = "Y" || $ans = "Yes" || $ans = "YES" || $ans = "yes" ]]; then
+          if [[ $(Rscript -e "dxutils::dx_exists('"$work"/checkpoint1')") = "[1] FALSE" ]]; then
+            echo "No checkpointing data found, aborting"
+            exit 1
+          fi
           tasks=()
+          echo "Determining which chromosomes still need to be computed..."
           for ii in {1..22} "X"; do
-            if [[ $(Rscript -e "dxutils::dx_exists('"$work"/finished/score_summary_"$ii".txt')") = "[1] TRUE" ]]; then
+            if [[ $(Rscript -e "dxutils::dx_exists('"$work"/finished/score_summary_"$ii".txt')") = "[1] FALSE" ]]; then
               if [[ $ii = "X" ]]; then
                 tasks+=(23)
+                echo "Chromosome 23 added to task list"
               else
                 tasks+=($ii)
+                echo "Chromosome $ii added to task list"
               fi
             fi
           done
+          if [[ ${#tasks[@]} -eq 0 ]]; then
+            echo "All chromosomes completed PRS computation, launching single task with chromosome 22 label to collate results"
+            tasks=(22)
+          fi
           break
         elif [[ $ans = "n" || $ans = "N" || $ans = "No" || $ans = "NO" || $ans = "no" ]]; then
           exit 1
+        else
+         echo "Unrecognised user input. Please answer 'y' or 'n'." 1>&2
+         read ans
         fi
       done
-      exit 0
     else
      echo "Unrecognised user input. Please answer 'y' or 'n'." 1>&2
      read ans
