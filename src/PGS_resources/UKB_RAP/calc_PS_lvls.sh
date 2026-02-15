@@ -168,30 +168,51 @@ if [[ $(Rscript -e "dxutils::dx_exists('"$work"')") = "[1] TRUE" ]]; then
       fi
       break
     elif [[ $ans = "n" || $ans = "N" || $ans = "No" || $ans = "NO" || $ans = "no" ]]; then
+      echo "Resume from existing checkpointing data in $work? (y/n)"
+      while true; do
+        if [[ $ans = "y" || $ans = "Y" || $ans = "Yes" || $ans = "YES" || $ans = "yes" ]]; then
+          tasks=()
+          for ii in {1..22} "X"; do
+            if [[ $(Rscript -e "dxutils::dx_exists('"$work"/finished/score_summary_"$ii".txt')") = "[1] TRUE" ]]; then
+              if [[ $ii = "X" ]]; then
+                tasks+=(23)
+              else
+                tasks+=($ii)
+              fi
+            fi
+          done
+          break
+        elif [[ $ans = "n" || $ans = "N" || $ans = "No" || $ans = "NO" || $ans = "no" ]]; then
+          exit 1
+        fi
+      done
       exit 0
     else
      echo "Unrecognised user input. Please answer 'y' or 'n'." 1>&2
      read ans
     fi
   done
+else 
+  echo "Working and temporary logging directory on RAP project storage is: $work" 1>&2
+  
+  # Log submitted command
+  arg_string=$@
+  echo "Batch command:" > command_log.txt
+  echo "------------------------------------------------------------------------" >> command_log.txt
+  echo "$src_dir/calc_PS_lvls.sh $arg_string" >> command_log.txt
+  echo "" >> command_log.txt
+  Rscript -e "dxutils::dx_upload('command_log.txt', '"$work"')"
+  rm command_log.txt
+  
+  # Copy across this script file
+  Rscript -e "dxutils::dx_upload('"$src_dir"/calc_PS_lvls.sh', '"$work"')"
+  if [[ $? -ne 0 ]]; then
+    exit 1
+  fi
+  
+  # Create task list
+  tasks=$(seq 1 23)
 fi
-if [[ $? -ne 0 ]]; then
-  exit 1
-fi
-
-echo "Working and temporary logging directory on RAP project storage is: $work" 1>&2
-
-# Log submitted command
-arg_string=$@
-echo "Batch command:" > command_log.txt
-echo "------------------------------------------------------------------------" >> command_log.txt
-echo "$src_dir/calc_PS_lvls.sh $arg_string" >> command_log.txt
-echo "" >> command_log.txt
-Rscript -e "dxutils::dx_upload('command_log.txt', '"$work"')"
-rm command_log.txt
-
-# Copy across this script file
-Rscript -e "dxutils::dx_upload('"$src_dir"/calc_PS_lvls.sh', '"$work"')"
 
 # build command string
 cmd[0]="Rscript calc_PS_lvls.R"
@@ -225,7 +246,7 @@ if $remove_multiallelic; then  cmd[27]="--remove-multiallelic"; fi
 cmd_string=${cmd[@]}
 
 # Create array job
-for task_id in {1..23}; do
+for task_id in ${tasks[@]}; do
   job_id=$(dx run run_script \
     --name "Calculate PGS, chromosome $task_id" \
     -iscript="$src_dir/calc_PS_lvls.R" \
