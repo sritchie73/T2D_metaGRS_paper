@@ -214,7 +214,7 @@ if (dx_exists(sprintf("%s/finished/score_summary_%s.txt", args[["--work"]], chrI
 }
 
 # Work out which checkpoint we're up to, if any
-if (dx_exists(sprintf("%s/checkpoint2/score_summary_%s", args[["--work"]], chrIdx))) {
+if (dx_exists(sprintf("%s/checkpoint2/score_summary_%s.txt", args[["--work"]], chrIdx))) {
   checkpoint <- 2
 } else if (dx_exists(sprintf("%s/checkpoint1/score_info_chr%s.txt", args[["--work"]], chrIdx))) {
   checkpoint <- 1
