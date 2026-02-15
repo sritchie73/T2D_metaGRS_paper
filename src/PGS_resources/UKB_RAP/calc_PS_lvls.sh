@@ -162,6 +162,7 @@ if [[ $(Rscript -e "dxutils::dx_exists('"$work"')") = "[1] TRUE" ]]; then
   read ans
   while true; do
     if [[ $ans = "y" || $ans = "Y" || $ans = "Yes" || $ans = "YES" || $ans = "yes" ]]; then
+      echo "Deleting $work..."
       Rscript -e "dxutils::dx_rm('"$work"')"
       if [[ $? -ne 0 ]]; then
         exit 1
@@ -201,6 +202,7 @@ if [[ $(Rscript -e "dxutils::dx_exists('"$work"')") = "[1] TRUE" ]]; then
          read ans
         fi
       done
+      break
     else
      echo "Unrecognised user input. Please answer 'y' or 'n'." 1>&2
      read ans
