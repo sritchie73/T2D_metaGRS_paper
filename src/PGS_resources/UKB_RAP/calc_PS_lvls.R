@@ -524,21 +524,36 @@ if (checkpoint < 1) {
         }
       }
       tryCatch({
-  			mapname("rsID", "rsid")
-  			mapname("chr_name", "chr")
-  			mapname("chr_position", "pos")
+
+        
+        # If score has been lifted over, use that information instead of the
+        # original (e.g. for scores lifted over from GRCh37 to GRCh38, and the
+        # user has specifically downloaded the lifted over version to match 
+        # their genotype data)
+        if ("hm_source" %in% names(score)) {
+          mapname("hm_rsID", "rsid")
+          mapname("hm_chr", "chr")
+          mapname("hm_pos", "pos")
+          if ("hm_inferOtherAllele" %in% names(score)) {
+            score[!is.na(hm_inferOtherAllele), other_allele := hm_inferOtherAllele]
+          }
+        } else {
+          mapname("rsID", "rsid")
+          mapname("chr_name", "chr")
+          mapname("chr_position", "pos")
+          
+          # Old vs. new score file format has different names
+          if ("reference_allele" %in% names(score)) {
+            mapname("reference_allele", "OA")
+          } else {
+            mapname("other_allele", "OA")
+          }
+        }
   			mapname("effect_allele", "EA")
   			mapname("allelefrequency_effect", "EAF")
   			mapname("effect_weight", "weight")
   			mapname("is_dominant", "is_dom")
   			mapname("is_recessive", "is_rec")
-  
-        # Old vs. new score file format has different names
-        if ("reference_allele" %in% names(score)) {
-  				mapname("reference_allele", "OA")
-        } else {
-  				mapname("other_allele", "OA")
-        }
       }, error=function(e) {
         score_info[idx, error := "PGS Catalog file detected, but could not map column names"]
       })
