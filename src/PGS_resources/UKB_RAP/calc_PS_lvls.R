@@ -1136,7 +1136,7 @@ if (checkpoint == 2) {
   }
   
   dx_download(sprintf("%s/checkpoint2/score_summary_%s.txt", args[["--work"]], chrIdx), "checkpointing/checkpoint2/")
-  score_info <- fread(sprintf("checkpointing/checkpoint2/score_summary_%s.txt", chrIdx), colClasses = c("compName"="character"))
+  score_info <- fread(sprintf("checkpointing/checkpoint2/score_summary_%s.txt", chrIdx), colClasses = c("compName"="character", "error"="character"))
   
   dx_download(sprintf("%s/checkpoint2/plink_input_info_%s.txt", args[["--work"]], chrIdx), "checkpointing/checkpoint2/")
   plink_input_info <- fread(sprintf("checkpointing/checkpoint2/plink_input_info_%s.txt", chrIdx))
