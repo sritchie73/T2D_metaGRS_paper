@@ -133,7 +133,7 @@ Options:
                               variants that have > 2 alleles in either the score file or genotype data are
                               discarded.
   --instance-type <name>      Instance type to use for each of the 26 parallel jobs (1 per chromosome) 
-                              submitted via dx run run_script [default: mem2_ssd1_v2_x8]
+                              submitted via dx run run_script [default: mem3_ssd1_v2_x8]
   --priority <type>           Priority for the job submitted by dx run run_script [default: low]
 EOF
 )"
