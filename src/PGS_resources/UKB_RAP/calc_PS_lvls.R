@@ -207,14 +207,10 @@ if (dx_exists(sprintf("%s/errors/score_summary.txt", args[["--work"]]))) {
   stop("All score files had errors, see ", args[["--work"]], "errors/score_summary.txt")
 }
 
-# Check that the job wasn't killed and restarted in the process of wrapping up
-if (dx_exists(sprintf("%s/finished/score_summary_%s.txt", args[["--work"]], chrIdx))) {
-  cat("Job restarted while shutting down after finishing successfully, nothing more to do\n")
-  quit(save="no")
-}
-
 # Work out which checkpoint we're up to, if any
-if (dx_exists(sprintf("%s/checkpoint2/score_summary_%s.txt", args[["--work"]], chrIdx))) {
+if (dx_exists(sprintf("%s/finished/score_summary_%s.txt", args[["--work"]], chrIdx))) {
+  checkpoint <- 3
+} else if (dx_exists(sprintf("%s/checkpoint2/score_summary_%s.txt", args[["--work"]], chrIdx))) {
   checkpoint <- 2
 } else if (dx_exists(sprintf("%s/checkpoint1/score_info_chr%s.txt", args[["--work"]], chrIdx))) {
   checkpoint <- 1
@@ -1269,10 +1265,10 @@ for(ii in 1:taskMax) {
 
   # Load full variant information for this chromosome
   if (args[["--genotype-format"]] == "pfile") {
-    varinfo <- fread(sprintf("input_data/chr%s.pvar", chr))
+    varinfo <- fread(sprintf("checkpointing/checkpoint2/chr%s.pvar", chr))
     setnames(varinfo, c("chromosome", "position", "match_id", "ref_allele", "alt_allele"))
   } else if (args[["--genotype-format"]] == "bfile") {
-    varinfo <- fread(sprintf("input_data/chr%s.bim", chr))
+    varinfo <- fread(sprintf("checkpointing/checkpoint2/chr%s.bim", chr))
     setnames(varinfo, c("chromosome", "match_id", "centimorgan", "position", "minor_allele", "major_allele"))
   }
   
@@ -1502,10 +1498,7 @@ if (args[["--type"]] == 'l') {
 }
 
 # Copy this script across to freeze version
-r_cmd <- commandArgs()
-sfile <- grep("--file", r_cmd, value=TRUE)
-sfile <- gsub("--file=", "", sfile)
-system(sprintf("cp %s output/", sfile), wait=TRUE)
+system("cp calc_PS_lvls.R output/", wait=TRUE)
 
 # Get launcher scripts and command
 dx_download(sprintf("%s/command_log.txt", args[["--work"]]), "output/")
@@ -1540,7 +1533,7 @@ if (length(outfiles) == 1) {
 	dx_upload("output/", out_dir)
 	
 	# Remove working files
-	if (!dx_exists("%s/errors/", args[["--work"]]) && args[["--work"]] != out_dir) {
+	if (!dx_exists(sprintf("%s/errors/", args[["--work"]])) && args[["--work"]] != out_dir) {
 	  dx_rm(args[["--work"]])
 	} else {
 	  dx_rm(sprintf("%s/checkpoint1", args[["--work"]]))
