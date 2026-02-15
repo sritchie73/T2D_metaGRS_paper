@@ -633,7 +633,7 @@ if (checkpoint == 1) {
   dx_download(sprintf("%s/checkpoint1/score_info_chr%s.txt", args[["--work"]], chrIdx), "checkpointing/checkpoint1/")
   dx_download(sprintf("%s/checkpoint1/scores_chr%s.txt", args[["--work"]], chrIdx), "checkpointing/checkpoint1/")
   score_info <- fread(sprintf("checkpointing/checkpoint1/score_info_chr%s.txt", chrIdx), na.strings = c("", "NA"), colClasses = c("compName"="character"))
-  scores <- fread(sprintf("checkpointing/checkpoint1/scores_chr%s.txt", chrIdx), na.strings = c("", "NA"), colClasses = c("compName"="character"))
+  scores <- fread(sprintf("checkpointing/checkpoint1/scores_chr%s.txt", chrIdx), na.strings = c("", "NA"), colClasses = c("compName"="character", "chr"="character"))
 }
 
 # Match the score files to the variant information in the genotype data
