@@ -208,7 +208,9 @@ if [[ $(Rscript -e "dxutils::dx_exists('"$work"')") = "[1] TRUE" ]]; then
      read ans
     fi
   done
-else 
+fi
+
+if [[ -z $tasks ]]; then
   echo "Working and temporary logging directory on RAP project storage is: $work" 1>&2
   
   # Log submitted command
