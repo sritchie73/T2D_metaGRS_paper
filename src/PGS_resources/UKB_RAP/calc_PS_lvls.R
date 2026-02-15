@@ -632,7 +632,7 @@ if (checkpoint == 1) {
   dir.create("checkpointing/checkpoint1")
   dx_download(sprintf("%s/checkpoint1/score_info_chr%s.txt", args[["--work"]], chrIdx), "checkpointing/checkpoint1/")
   dx_download(sprintf("%s/checkpoint1/scores_chr%s.txt", args[["--work"]], chrIdx), "checkpointing/checkpoint1/")
-  score_info <- fread(sprintf("checkpointing/checkpoint1/score_info_chr%s.txt", chrIdx), na.strings = c("", "NA"), colClasses = c("compName"="character"))
+  score_info <- fread(sprintf("checkpointing/checkpoint1/score_info_chr%s.txt", chrIdx), na.strings = c("", "NA"), colClasses = c("compName"="character", "error"="character"))
   scores <- fread(sprintf("checkpointing/checkpoint1/scores_chr%s.txt", chrIdx), na.strings = c("", "NA"), colClasses = c("compName"="character", "chr"="character"))
 }
 
@@ -828,7 +828,7 @@ if (checkpoint < 2) {
   }
 
   # Check at this point whether each score has only 1 effect weight per variant.
-  bad <- scores[,.N,by=.(pos, compName)][N > 1, .(compName)]
+  bad <- unique(scores[,.N,by=.(pos, compName)][N > 1, .(compName)])
   score_info[bad, on = .(compName), error := "Score has multiple effect weights for the same variant/position"]
   scores <- scores[!bad, on = .(compName)]
 
@@ -1077,7 +1077,7 @@ if (checkpoint < 2) {
   plink_input_info <- data.table()
   if ("is_dom" %in% names(scores)) {
     dominant <- scores[(is_dom)]
-    scores <- scores[!(is_dom)]
+    scores <- scores[!(is_dom) | is.na(is_dom)]
   
     if (nrow(dominant) > 0) {
       plink_input_info <- rbind(fill=TRUE, plink_input_info, 
@@ -1089,7 +1089,7 @@ if (checkpoint < 2) {
 
   if ("is_rec" %in% names(scores)) {
     recessive <- scores[(is_rec)]
-    scores <- scores[!(is_rec)]
+    scores <- scores[!(is_rec) | is.na(is_rec)]
   
     if (nrow(recessive) > 0) {
       plink_input_info <- rbind(fill=TRUE, plink_input_info, 
