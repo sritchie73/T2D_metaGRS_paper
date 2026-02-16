@@ -71,7 +71,7 @@ Options:
                               genotype data by the rsid column instead of by chromosome and
                               position when all three columns are provided.
   --cohort-name <name>        Name of the group of samples, used to name the output file name
-                              and folder (if --out not provided). [default: UKBv3]
+                              and folder (if --out not provided). [default: INTERVAL]
   --out <directory>           Directory to store the results in. By default, the results are stored
                               in a folder named <--cohort-name>_sample_levels/ in the same directory
                               as each input --score-file. If multiple score files are detected (files
@@ -86,9 +86,9 @@ Options:
                               data for the samples you want to calculate the polygenic score levels in.
                               Defaults to UK Biobank, using the phase 3 release genotype data. For non-autosomal
                               chromosomes, the chromosomes are assumed to be 'X', 'Y', 'XY' and 'MT'.
-                              [default: ~/rds/rds-asb38-ceu-ukbiobank/genetics/P7439/post_qc_data/imputed/HRC_UK10K/plink_format/GRCh37/pgen/ukb_imp_v3_dedup_chr]
+                              [default: $HOME/rds/rds-jmmh2-post_qc_data/interval/imputed/uk10k_1000g_b37/imputed/plink_format/pgen/impute_dedup_]]
   --genotype-suffix <suffix>  Suffix for the filename occurring after the chromosome number but before the
-                              .pgen/.pvar/.psam extension for the genotype data. [default: NULL]
+                              .pgen/.pvar/.psam extension for the genotype data. [default: _interval]
   --genotype-format <format>  Format the genotype data is stored in, must correspond to one of the arguments to
                               plink, e.g. the default, 'pfile' is passed directly to plink as '--pfile'. To use
                               plink version 1 binary data (bed/bim/fam) set this as 'bfile'. [default: 'pfile']
@@ -565,21 +565,34 @@ scores <- foreach(idx = score_info[,.I], .combine=rbindf) %do% {
       }
     }
     tryCatch({
-      mapname("rsID", "rsid")
-      mapname("chr_name", "chr")
-      mapname("chr_position", "pos")
+      # If score has been lifted over, use that information instead of the
+      # original (e.g. for scores lifted over from GRCh37 to GRCh38, and the
+      # user has specifically downloaded the lifted over version to match 
+      # their genotype data)
+      if ("hm_source" %in% names(score)) {
+        mapname("hm_rsID", "rsid")
+        mapname("hm_chr", "chr")
+        mapname("hm_pos", "pos")
+        if ("hm_inferOtherAllele" %in% names(score)) {
+          score[!is.na(hm_inferOtherAllele), other_allele := hm_inferOtherAllele]
+        }
+      } else {
+        mapname("rsID", "rsid")
+        mapname("chr_name", "chr")
+        mapname("chr_position", "pos")
+        
+        # Old vs. new score file format has different names
+        if ("reference_allele" %in% names(score)) {
+          mapname("reference_allele", "OA")
+        } else {
+          mapname("other_allele", "OA")
+        }
+      }
       mapname("effect_allele", "EA")
       mapname("allelefrequency_effect", "EAF")
       mapname("effect_weight", "weight")
       mapname("is_dominant", "is_dom")
       mapname("is_recessive", "is_rec")
-      
-      # Old vs. new score file format has different names
-      if ("reference_allele" %in% names(score)) {
-        mapname("reference_allele", "OA")
-      } else {
-        mapname("other_allele", "OA")
-      }
     }, error=function(e) {
       score_info[idx, error := "PGS Catalog file detected, but could not map column names"]
     })
@@ -869,11 +882,6 @@ if (args[["--remove-multiallelic"]]) {
   score_info[, n_multiallele_removed := ifelse(n_multiallele > 0, 0, NA)]
 }
 
-# Check at this point whether each score has only 1 effect weight per variant.
-bad <- scores[,.N,by=.(pos, compName)][N > 1, .(compName)]
-score_info[bad, on = .(compName), error := "Score has multiple effect weights for the same variant/position"]
-scores <- scores[!bad, on = .(compName)]
-
 # can exit if all errors
 if (nrow(scores) == 0) {
   if (args[["--genotype-format"]] == "pfile") {
@@ -1141,7 +1149,7 @@ make_score_files <- function(dt, model_name, file_prefix) {
 plink_input_info <- data.table()
 if ("is_dom" %in% names(scores)) {
   dominant <- score[(is_dom)]
-  scores <- scores[!(is_dom)]
+  scores <- scores[!(is_dom) | is.na(dom)]
   
   if (nrow(dominant) > 0) {
     plink_input_info <- rbind(fill=TRUE, plink_input_info, 
@@ -1153,7 +1161,7 @@ if ("is_dom" %in% names(scores)) {
 
 if ("is_rec" %in% names(scores)) {
   recessive <- score[(is_rec)]
-  scores <- scores[!(is_rec)]
+  scores <- scores[!(is_rec) | is.na(rec)]
   
   if (nrow(recessive) > 0) {
     plink_input_info <- rbind(fill=TRUE, plink_input_info, 
@@ -1269,28 +1277,14 @@ for (chr in c(1:22, "X", "Y", "XY", "MT")) {
 }
 
 # Collate the plink logs
-logfile <- sprintf("%s/collated_plink_logs.txt", work_dir)
-appendifexists <- function(path) {
-  if (!file.exists(logfile)) {
-    tryCatch({
-      system(sprintf("touch %s", logfile))
-    }, warning=function(w) {
-      stop("Could not write to working directory ", work_dir)
-    })
-  }
-  if (file.exists(path)) {
-    tryCatch({
-      system(sprintf("cat %s >> %s", path, logfile), wait=TRUE)
-    }, warning=function(w) {
-      stop("Write failure when collating plink2 log files in working directory ", work_dir)
-    })
-    system(sprintf("rm -f %s", path), wait=TRUE)
-  }
+system(sprintf("touch %s/collated_plink_logs.txt", work_dir))
+
+freqxlogs <- list.files(path=work_dir, pattern="ambig_freqx_extract_.*.log", full.names=TRUE)
+for (ff in freqxlogs) {
+  system(sprintf("cat %s >> %s/collated_plink_logs.txt", ff, work_dir), wait=TRUE)
+  system(sprintf("rm -f %s", ff), wait=TRUE)
 }
-system(sprintf("touch %s/collated_plink_logs.txt", work_dir), wait=TRUE)
-for (chr in c(1:22, "X", "Y", "XY", "MT")) {
-  appendifexists(sprintf("%s/ambig_freqx_extract_chr%s.log", work_dir, chr))
-}
+
 scoringlogs <- list.files(path=work_dir, pattern="collated_scores_.*.log", full.names=TRUE)
 for (ff in scoringlogs) {
   system(sprintf("cat %s >> %s/collated_plink_logs.txt", ff, work_dir), wait=TRUE)

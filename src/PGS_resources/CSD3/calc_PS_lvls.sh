@@ -81,7 +81,7 @@ Options:
                               genotype data by the rsid column instead of by chromosome and
                               position when all three columns are provided.
   --cohort-name <name>        Name of the group of samples, used to name the output file name
-                              and folder (if --out not provided). [default: UKBv3]
+                              and folder (if --out not provided). [default: INTERVAL]
   --out <directory>           Directory to store the results in. By default, the results are stored 
                               in a folder named <--cohort-name>_sample_levels/ in the same directory 
                               as each input --score-file. If multiple score files are detected (files
@@ -100,9 +100,9 @@ Options:
   --genotype-prefix <prefix>  Path and prefix occurring before the chromosome number for the genotype
                               data for the samples you want to calculate the polygenic score levels in.
                               Defaults to UK Biobank, using the phase 3 release genotype data.
-                              [default: $HOME/rds/rds-asb38-ceu-ukbiobank/genetics/P7439/post_qc_data/imputed/HRC_UK10K/plink_format/GRCh37/pgen/ukb_imp_v3_dedup_chr]
+                              [default: $HOME/rds/rds-jmmh2-post_qc_data/interval/imputed/uk10k_1000g_b37/imputed/plink_format/pgen/impute_dedup_]
   --genotype-suffix <suffix>  Suffix for the filename occurring after the chromosome number but before the
-                              .pgen/.pvar/.psam extension for the genotype data. [default: NULL]
+                              .pgen/.pvar/.psam extension for the genotype data. [default: _interval]
   --single-geno               Flag to indicate that the genotype data is stored as a single file, not split across
                               multiple chromosomes. In this case, you can ignore the --genotype-suffix argument.
   --genotype-format <format>  Format the genotype data is stored in, must correspond to one of the arguments to
@@ -131,8 +131,8 @@ Options:
                               variants that have > 2 alleles in either the score file or genotype data are
                               discarded.
   --time <runtime>            Passed to sbatch. [default: 6:0:0]
-  --account <names>           Passed to sbatch. [default: INOUYE-SL3-CPU]
-  --partition <names>         Passed to sbatch. [default: skylake,skylake-himem,cclake,cclake-himem]
+  --account <names>           Passed to sbatch. [default: INOUYE-SL2-CPU]
+  --partition <names>         Passed to sbatch. [default: sapphire]
   --mem-per-chr <MB>          Memory to allocate to each task (26 tasks, 1 per chromosome).
                               This also dictates the number of cores allocated to each task,
                               as on CSD3 the memory requested dictats the number of CPUs 
