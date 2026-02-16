@@ -838,11 +838,6 @@ if (checkpoint < 2) {
     score_info[, n_multiallele_removed := ifelse(n_multiallele > 0, 0, NA)]
   }
 
-  # Check at this point whether each score has only 1 effect weight per variant.
-  bad <- unique(scores[,.N,by=.(pos, compName)][N > 1, .(compName)])
-  score_info[bad, on = .(compName), error := "Score has multiple effect weights for the same variant/position"]
-  scores <- scores[!bad, on = .(compName)]
-
   # can exit if all errors and no variants remain
   if (nrow(scores) == 0) {
     fwrite(score_info, sep="\t", quote=FALSE, file=sprintf("errors/score_summary_%s.txt", chrIdx))
