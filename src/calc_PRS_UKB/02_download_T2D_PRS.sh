@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/opt/homebrew/bin/bash
 
 # Needs pygscatalog, on OSX:
 # pip3 install --user --break-system-packages pgscatalog-core
