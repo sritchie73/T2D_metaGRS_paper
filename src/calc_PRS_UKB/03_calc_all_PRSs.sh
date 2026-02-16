@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/opt/homebrew/bin/bash
 
 bash src/PGS_resources/UKB_RAP/calc_PS_lvls.sh \
   --score-file 'PRS_score_files' \
