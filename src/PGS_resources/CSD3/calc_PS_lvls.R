@@ -38,22 +38,23 @@ Options:
                               'NULL'. [default: rsid]
   --score-chr <col>           Name or number of the column in the polygenic score file corresponding to
                               the variant's chromosome. If column is not present, set to 'NULL'.
-                              If the score contains non-autosomal variants, then the chromosome field 
-                              *must* contain one of X, Y, XY, or MT. [default: chr]
+                              If the score contains non-autosomal variants, then the chromosome field
+                              *must* contain one of X, Y, XY, or MT. [default: chr_name]
   --score-pos <col>           Name or number of the column in the polygenic score file corresponding to
-                              the variant's position. If column is not present, set to 'NULL'. [default: pos]
+                              the variant's position. If column is not present, set to 'NULL'. [default: chr_position]
   --score-EA <col>            Name or number of the column in the polygenic score file corresponding to
                               the variant's effect allele. [default: effect_allele]
   --score-EAF <col>           Name or number of the column in the polygenic score file corresponding to
-                              the effect allele frequency. If column is not present, set to 'NULL'. [default: NULL]
+                              the effect allele frequency (i.e. if using --keep-ambiguous and --ambiguous-thresh).
+                              If column is not present, set to 'NULL'. [default: NULL]
   --score-OA <col>            Name or number of the column in the polygenic score file corresponding to
-                              the variant's non-effect allele. If column is not present, set to 'NULL'. 
+                              the variant's non-effect allele. If column is not present, set to 'NULL'.
                               [default: other_allele]
   --score-weight <col>        Name or number of the column in the polygenic score file corresponding to
                               the effect allele's weight in the polygenic score. If the score file has
                               multiple weight columns for multiple scores, set this to 'm' to calculate
                               the levels of all these scores. In this case, the program will assume that
-                              all columns not listed in the arguments above are weights columns. [default: weight]
+                              all columns not listed in the arguments above are weights columns. [default: effect_weight]
   --score-dominant <col>      Column of TRUE/FALSE values indicating whether the effect for each variant
                               should be considered dominant (i.e. the weight is multiplied by the effect 
                               allele presence/absence rather than by the number of copies). [default: NULL]
