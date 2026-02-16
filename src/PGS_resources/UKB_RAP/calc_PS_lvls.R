@@ -4,6 +4,7 @@
 
 suppressMessages(library("data.table"))
 suppressMessages(library("foreach"))
+suppressMessages(library("doMC"))
 suppressMessages(library("docopt"))
 suppressMessages(library("bit64"))
 suppressMessages(library("dxutils"))
@@ -177,6 +178,11 @@ taskIdx <- Sys.getenv("SLURM_ARRAY_TASK_ID")
 chrIdx <- task_to_chr(taskIdx)
 taskIdx <- as.integer(taskIdx)
 taskMax <- as.integer(Sys.getenv("SLURM_ARRAY_TASK_MAX"))
+
+# Set up parallel downloads
+# only foreach() %dopar% {} is to at final cleanup when downloading files 
+# (i.e. launch taskMax system commands to 'dx download' in background)
+registerDoMC(taskMax) 
 
 # Determine chromosome specific file paths.
 if (args[["--genotype-format"]] == "pfile") {
@@ -1249,7 +1255,7 @@ dx_download(sprintf("%s/checkpoint3/", args[["--work"]]), "checkpointing/checkpo
 dx_download(sprintf("%s/finished", args[["--work"]]))
 
 # Download all the original pvar/bim files we will need to collate information
-orig_pvar_files <- foreach(taskIdx = seq_len(taskMax), .inorder = TRUE) %dopar% {
+orig_pvar_files <- foreach(taskIdx = 1:taskMax, .inorder = TRUE) %dopar% {
   chr <- task_to_chr(as.character(taskIdx))
   origfile <- paste0(args[["--genotype-prefix"]], ifelse(args[["--single-geno"]], "", chr), args[["--genotype-suffix"]])
   
