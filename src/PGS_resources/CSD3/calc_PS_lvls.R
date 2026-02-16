@@ -2,13 +2,6 @@
 # Load R package dependencies
 ########################################################################################
 
-# Set the R package location diroctory to one with the R packages pre-installed.
-srcDir = "/rds/project/asb38/rds-asb38-ceu-ukbiobank/projects/P7439/inouyelab/share_space/GRS_resources/"
-SoftwareDir = sprintf("%s/software_dependencies/", srcDir)
-RpackageDir = sprintf("%s/Rpackages/", SoftwareDir)
-RpackageDir = sprintf("%s/%s.%s/", RpackageDir, R.version$major, gsub("\\..*", "", R.version$minor))
-.libPaths(RpackageDir)
-
 suppressMessages(library("data.table"))
 suppressMessages(library("foreach"))
 suppressMessages(library("docopt"))

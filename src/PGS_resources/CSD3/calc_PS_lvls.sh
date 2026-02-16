@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-src_dir=$HOME/rds/rds-asb38-ceu-ukbiobank/projects/P7439/inouyelab/share_space/GRS_resources/
-
-eval "$($src_dir/software_dependencies/docopts -h - : "$@" <<EOF
+eval "$(docopts -h - : "$@" <<EOF
 Calculate the levels of a polygenic score in a group of samples
 
 By default, this program calculates score levels in UK Biobank
@@ -186,11 +184,11 @@ echo "Working and temporary logging directory is: $work" 1>&2
 arg_string=$@
 echo "Batch command:" > $work/command_log.txt
 echo "------------------------------------------------------------------------" >> $work/command_log.txt
-echo "$src_dir/calc_PS_lvls.sh $arg_string" >> $work/command_log.txt
+echo "src/PGS_resources/CSD3/calc_PS_lvls.sh $arg_string" >> $work/command_log.txt
 echo "" >> $work/command_log.txt
 
 # Copy across this script file
-cp $src_dir/calc_PS_lvls.sh $work
+cp src/PGS_resources/CSD3/calc_PS_lvls.sh $work
 chmod -x $work/calc_PS_lvls.sh
 
 # Determine memory to allow plink to use. This is less
@@ -203,7 +201,7 @@ if [[ $plink_mem -lt 0 ]]; then
 fi
 
 # build command string
-cmd[0]="Rscript --vanilla $src_dir/calc_PS_lvls.R"
+cmd[0]="Rscript --vanilla src/PGS_resources/CSD3/calc_PS_lvls.R"
 cmd[1]="--score-file $score_file"
 cmd[2]="--mem $plink_mem"
 cmd[3]="--work $work"
