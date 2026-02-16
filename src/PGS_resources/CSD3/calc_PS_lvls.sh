@@ -201,7 +201,7 @@ if [[ $plink_mem -lt 0 ]]; then
 fi
 
 # build command string
-cmd[0]="Rscript --vanilla src/PGS_resources/CSD3/calc_PS_lvls.R"
+cmd[0]="Rscript src/PGS_resources/CSD3/calc_PS_lvls.R"
 cmd[1]="--score-file $score_file"
 cmd[2]="--mem $plink_mem"
 cmd[3]="--work $work"
