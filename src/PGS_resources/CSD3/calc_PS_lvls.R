@@ -1143,7 +1143,7 @@ make_score_files <- function(dt, model_name, file_prefix) {
 plink_input_info <- data.table()
 if ("is_dom" %in% names(scores)) {
   dominant <- scores[(is_dom)]
-  scores <- scores[!(is_dom) | is.na(dom)]
+  scores <- scores[!(is_dom) | is.na(is_dom)]
   
   if (nrow(dominant) > 0) {
     plink_input_info <- rbind(fill=TRUE, plink_input_info, 
@@ -1155,7 +1155,7 @@ if ("is_dom" %in% names(scores)) {
 
 if ("is_rec" %in% names(scores)) {
   recessive <- scores[(is_rec)]
-  scores <- scores[!(is_rec) | is.na(rec)]
+  scores <- scores[!(is_rec) | is.na(is_rec)]
   
   if (nrow(recessive) > 0) {
     plink_input_info <- rbind(fill=TRUE, plink_input_info, 
