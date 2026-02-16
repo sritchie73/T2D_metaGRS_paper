@@ -530,8 +530,6 @@ if (checkpoint < 1) {
         }
       }
       tryCatch({
-
-        
         # If score has been lifted over, use that information instead of the
         # original (e.g. for scores lifted over from GRCh37 to GRCh38, and the
         # user has specifically downloaded the lifted over version to match 
