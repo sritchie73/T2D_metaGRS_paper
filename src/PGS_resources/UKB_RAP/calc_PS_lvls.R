@@ -1248,6 +1248,20 @@ dx_download(sprintf("%s/checkpoint2/", args[["--work"]]), "checkpointing/checkpo
 dx_download(sprintf("%s/checkpoint3/", args[["--work"]]), "checkpointing/checkpoint3/")
 dx_download(sprintf("%s/finished", args[["--work"]]))
 
+# Download all the original pvar/bim files we will need to collate information
+orig_pvar_files <- foreach(taskIdx = seq_len(taskMax), .inorder = TRUE) %dopar% {
+  chr <- task_to_chr(as.character(taskIdx))
+  origfile <- paste0(args[["--genotype-prefix"]], ifelse(args[["--single-geno"]], "", chr), args[["--genotype-suffix"]])
+  
+  if (args[["--genotype-format"]] == "pfile") {
+    origfile <- sprintf("%s.pvar", origfile)
+    dx_download(origfile, "input_data/")
+  } else if (args[["--genotype-format"]] == "bfile") {
+    origfile <- sprintf("%s.bim", origfile)
+    dx_download(origfile, "input_data/")
+  }
+}
+
 # Collate the plink logs
 system("touch output/collated_plink_logs.txt")
 
@@ -1283,20 +1297,15 @@ for(ii in 1:taskMax) {
   }
   
   # Obtain the rsid in the original data
-  origfile <- paste0(args[["--genotype-prefix"]], ifelse(args[["--single-geno"]], "", chr), args[["--genotype-suffix"]])  
   if (args[["--genotype-format"]] == "pfile") {
-    origfile <- sprintf("%s.pvar", origfile)
-    origfile <- dx_download(origfile, "input_data/")
-    line1 <- readLines(origfile, 1)
+    line1 <- readLines(orig_pvar_files[ii], 1)
 		if (grepl("^##", line1)) {
-			varinfo[, rsid := fread(cmd=sprintf("grep -v '^#' %s", origfile), sep="\t")[["V3"]]]
+			varinfo[, rsid := fread(cmd=sprintf("grep -v '^#' %s", orig_pvar_files[ii]), sep="\t")[["V3"]]]
     } else {
-			varinfo[, rsid := fread(cmd=sprintf("tail -n +2 %s | cut -f 3", origfile), header=FALSE)[[1]]]
+			varinfo[, rsid := fread(cmd=sprintf("tail -n +2 %s | cut -f 3", orig_pvar_files[ii]), header=FALSE)[[1]]]
     }
   } else if (args[["--genotype-format"]] == "bfile") {
-    origfile <- sprintf("%s.bim", origfile)
-    origfile <- dx_download(origfile, "input_data/")
-    varinfo[, rsid := fread(cmd=sprintf("cut -f 2 %s.bim", origfile), header=FALSE)[[1]]]
+    varinfo[, rsid := fread(cmd=sprintf("cut -f 2 %s.bim", orig_pvar_files[ii]), header=FALSE)[[1]]]
   }
 
   # Obtain the effect allele frequency, if applicable
