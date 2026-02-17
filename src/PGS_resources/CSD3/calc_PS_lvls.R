@@ -1012,7 +1012,7 @@ if (nrow(ambig) > 0) {
       }
       
       # Do frequency calculation for ambiguous variants
-      cmd <- normalizePath(sprintf("%s/plink2", SoftwareDir))
+      cmd <- "plink2"
       cmd[2] <- sprintf("--%s %s/chr%s", args[["--genotype-format"]], work_dir, chrIdx)
       cmd[3] <- sprintf("--extract %s/ambig_freqx_extract_chr%s", work_dir, chrIdx)
       cmd[4] <- sprintf("--threads %s --memory 1024 --silent", ncores)
@@ -1209,7 +1209,7 @@ for (idx in plink_input_info[,.I]) {
                  work_dir, plink_input_info[idx, model], chrIdx, plink_input_info[idx, group]), wait=TRUE)
   
   # Calculate the score sums
-  cmd <- normalizePath(sprintf("%s/plink2", SoftwareDir))
+  cmd <- "plink2"
   cmd[2] <- sprintf("--%s %s/chr%s", args[["--genotype-format"]], work_dir, chrIdx)
   cmd[3] <- sprintf("--out %s/collated_scores_%s_chr%s_group%s", work_dir, plink_input_info[idx, model], chrIdx, plink_input_info[idx, group])
   cmd[4] <- sprintf("--threads %s --memory %s --silent", ncores, args[["--mem"]])
@@ -1305,7 +1305,6 @@ for(chr in c(1:22, "X", "Y", "XY", "MT")) {
     setnames(varinfo, c("chromosome", "match_id", "centimorgan", "position", "minor_allele", "major_allele"))
   }
   
-  
   # Obtain the rsid in the original data
   origfile <- paste0(args[["--genotype-prefix"]], ifelse(args[["--single-geno"]], "", chr), args[["--genotype-suffix"]])  
   if (args[["--genotype-format"]] == "pfile") {
@@ -1388,7 +1387,6 @@ for(chr in c(1:22, "X", "Y", "XY", "MT")) {
   }
 }
 system(sprintf("gzip %s/matched_variants.txt", work_dir), wait=TRUE)
-
 
 # Load all the score sum files and total across chromosomes and models. We need to 
 # progressively load and sum to avoid having to load all scores across all chromosomes

@@ -5,5 +5,5 @@ bash src/PGS_resources/CSD3/calc_PS_lvls.sh \
   --type 'd' \
   --out 'data/INTERVAL/PRS_levels' \
   --single-out 'all_PRSs' \
-  --work 'data/INTERVAL/PRS_levels'
+  --work 'data/INTERVAL/PRS_levels/tmp'
   
