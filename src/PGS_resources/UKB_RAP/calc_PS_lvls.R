@@ -1065,6 +1065,15 @@ if (checkpoint < 2) {
     dx_upload("finished", args[["--work"]])
     quit(save="no")
   }
+  
+  # If there are multiple weights for an allele in a score, this is likely due
+  # to two sites from GRCh37 being merged in GRCh38, in which case we just sum
+  # the weights.
+  merged_sites <- scores[,.N,by=.(rsid, EA, compName)][N > 1]
+  merged_sites <- scores[merged_sites, on = .(rsid, EA, compName)]
+  merged_sites <- merged_sites[, .(weight=sum(weight)), by=.(rsid, EA, compName)]
+  scores[merged_sites, on = .(rsid, EA, compName), weight := i.weight]
+  scores <- unique(scores)
 
   # Split scores into those for linear, dominant, and recessive effects,
   # transform to wide format, write out, and remove.
