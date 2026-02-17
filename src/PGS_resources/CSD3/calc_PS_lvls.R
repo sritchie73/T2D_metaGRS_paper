@@ -1648,7 +1648,7 @@ for (outIdx in unique(collated_info$outpath)) {
   # Extract subset of scores to write out and cast to wide format
   this_info <- collated_info[outpath == outIdx]
   this_info[, score_fail := FALSE]
-  this_info[!(compName %in% unique(sscores$compName)) || is.na(weight_column), score_fail := TRUE]
+  this_info[!(compName %in% unique(sscores$compName)) | is.na(weight_column), score_fail := TRUE]
   this_sscore <- sscores[this_info[, .(compName, score_name)], on = .(compName), nomatch=0, .(IID, score_name, score_sum)]
   this_sscore <- dcast(this_sscore, IID ~ score_name, value.var="score_sum")
   this_sscore <- this_sscore[, intersect(c("IID", collated_info$score_name), names(this_sscore)), with=FALSE] # preserve score order
@@ -1729,11 +1729,4 @@ if (nrow(collated_info) > 0) {
 } 
 
 # Final cleanup
-system(sprintf("rm -f %s/collated_scores.sscore.gz", work_dir), wait=TRUE)
-system(sprintf("rm -f %s/score_summary.txt", work_dir), wait=TRUE)
-system(sprintf("rm -f %s/collated_plink_logs.txt", work_dir), wait=TRUE)
-system(sprintf("rm -f %s/calc_PS_lvls.sh", work_dir), wait=TRUE)
-system(sprintf("rm -f %s/command_log.txt", work_dir), wait=TRUE)
-system(sprintf("rm -f %s/matched_variants.txt.gz", work_dir), wait=TRUE)
-system(sprintf("rm -rf %s/slurm_logs", work_dir), wait=TRUE) # will this cause the job to fail?
-system(sprintf("rmdir %s", work_dir), wait=TRUE)
+system(sprintf("rm -rf %s", work_dir), wait=TRUE)
