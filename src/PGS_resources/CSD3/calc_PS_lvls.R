@@ -595,6 +595,14 @@ scores <- foreach(idx = score_info[,.I], .combine=rbindf) %do% {
       return(NULL)
     }
     
+    # Some PGS Catalog scores have duplicated entries, for example where two
+    # SNPs have been later merged together. A good example of this is PGS005021
+    # which reports the same effect weight for chr22:18187216 (GRCh37) under
+    # both rs9617611 and rs12170671, but rs12170671 is merged into rs9617611
+    # and the harmonized score file contains only rs9617611 in the hm_rsID 
+    # column - in these cases just keep one entry
+    score <- unique(score, by=c("chr", "pos", "EA", "weight"))
+    
     # Record how many variants are in the score file
     score_info[idx, n_var := score[,.N]]
     if ("chr" %in% names(score)) {
@@ -622,14 +630,6 @@ scores <- foreach(idx = score_info[,.I], .combine=rbindf) %do% {
     
     # Drop any columns we won't use
     score <- score[, which(names(score) %chin% c("rsid", "chr", "pos", "EA", "EAF", "OA", "is_dom", "is_rec", "weight", "compName")), with=FALSE]
-    
-    # Some PGS Catalog scores have duplicated entries, for example where two
-    # SNPs have been later merged together. A good example of this is PGS005021
-    # which reports the same effect weight for chr22:18187216 (GRCh37) under
-    # both rs9617611 and rs12170671, but rs12170671 is merged into rs9617611
-    # and the harmonized score file contains only rs9617611 in the hm_rsID 
-    # column - in these cases just keep one entry
-    score <- unique(score)
     
     # Detect and convert missing values
     if (score[, any(is.na(weight))]) {
