@@ -623,6 +623,14 @@ scores <- foreach(idx = score_info[,.I], .combine=rbindf) %do% {
     # Drop any columns we won't use
     score <- score[, which(names(score) %chin% c("rsid", "chr", "pos", "EA", "EAF", "OA", "is_dom", "is_rec", "weight", "compName")), with=FALSE]
     
+    # Some PGS Catalog scores have duplicated entries, for example where two
+    # SNPs have been later merged together. A good example of this is PGS005021
+    # which reports the same effect weight for chr22:18187216 (GRCh37) under
+    # both rs9617611 and rs12170671, but rs12170671 is merged into rs9617611
+    # and the harmonized score file contains only rs9617611 in the hm_rsID 
+    # column - in these cases just keep one entry
+    score <- unique(score)
+    
     # Detect and convert missing values
     if (score[, any(is.na(weight))]) {
       warning("Missing values found in weight column and converted to 0 for score file ", score_info[idx, path])
@@ -893,13 +901,18 @@ if (nrow(scores) == 0) {
   quit(save="no")
 }
 
+# Populate the OA field for scores missing that information
+miss_OA <- scores[is.na(OA)]
+scores <- scores[!is.na(OA)]
+miss_OA[varinfo, on = .(pos, EA=alt), OA := ref]
+miss_OA[varinfo, on = .(pos, EA=ref), OA := alt]
+scores <- rbind(scores, miss_OA)
+rm(miss_OA)
+
 # Now that we've done the matching, give the variants in the score file
 # the same unique identifier they have in the variant information file.
-# For multi-allelic variants we want to avoid double counting alleles,
-# e.g. where the effect allele is the one in common across the multiple
-# rows.
-scores[varinfo, on = .(pos, EA=alt), rsid := paste(i.chr, i.pos, i.alt, i.ref, sep=":")]
-scores[varinfo, on = .(pos, EA=ref), rsid := paste(i.chr, i.pos, i.alt, i.ref, sep=":")]
+scores[varinfo, on = .(pos, EA=alt, OA=ref), rsid := paste(i.chr, i.pos, i.alt, i.ref, sep=":")]
+scores[varinfo, on = .(pos, EA=ref, OA=alt), rsid := paste(i.chr, i.pos, i.alt, i.ref, sep=":")]
 
 # Now identify variants whose effect allele is ambiguous (e.g. A/T or G/C SNPs). The 
 # following works for biallelic sites and some multi-allelic sites
