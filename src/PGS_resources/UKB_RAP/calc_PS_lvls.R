@@ -1277,7 +1277,7 @@ dx_download(sprintf("%s/checkpoint3/", args[["--work"]]), "checkpointing/checkpo
 dx_download(sprintf("%s/finished", args[["--work"]]))
 
 # Download all the original pvar/bim files we will need to collate information
-orig_pvar_files <- foreach(taskIdx = 1:taskMax, .inorder = TRUE) %dopar% {
+orig_pvar_files <- foreach(taskIdx = 1:taskMax, .inorder = TRUE, .combine=c) %dopar% {
   chr <- task_to_chr(as.character(taskIdx))
   origfile <- paste0(args[["--genotype-prefix"]], ifelse(args[["--single-geno"]], "", chr), args[["--genotype-suffix"]])
   
