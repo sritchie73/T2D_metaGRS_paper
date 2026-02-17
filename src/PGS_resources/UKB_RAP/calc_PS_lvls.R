@@ -1603,7 +1603,7 @@ for (outIdx in unique(collated_info$outpath)) {
   # Extract subset of scores to write out and cast to wide format
   this_info <- collated_info[outpath == outIdx]
   this_info[, score_fail := FALSE]
-  this_info[!(compName %in% unique(sscores$compName)) || is.na(weight_column), score_fail := TRUE]
+  this_info[!(compName %in% unique(sscores$compName)) | is.na(weight_column), score_fail := TRUE]
   this_sscore <- sscores[this_info[, .(compName, score_name)], on = .(compName), nomatch=0, .(IID, score_name, score_sum)]
   this_sscore <- dcast(this_sscore, IID ~ score_name, value.var="score_sum")
   this_sscore <- this_sscore[, intersect(c("IID", collated_info$score_name), names(this_sscore)), with=FALSE] # preserve score order
