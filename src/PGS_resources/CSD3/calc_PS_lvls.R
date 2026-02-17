@@ -570,6 +570,7 @@ scores <- foreach(idx = score_info[,.I], .combine=rbindf) %do% {
         if ("hm_inferOtherAllele" %in% names(score)) {
           score[!is.na(hm_inferOtherAllele), other_allele := hm_inferOtherAllele]
         }
+        mapname("other_allele", "OA")
       } else {
         mapname("rsID", "rsid")
         mapname("chr_name", "chr")
@@ -1116,8 +1117,9 @@ sdcast <- function(...) {
   tryCatch({
     dcast(...)
   }, warning=function(w) {
-    score_info[!is.na(error), error := paste0("Critical error collating score weights on chromosome ", 
-                                              chrIdx, ": encountered multiple weights for the same effect allele.")]
+    score_info[, error := sprintf(
+      "%sCritical error collating score weights on chromosome %s: encountered multiple weights for the same effect allele.",
+      ifelse(is.na(error) | error == "", "", paste0(error, ".")), chrIdx)]
     fwrite(score_info, sep="\t", quote=FALSE, file=sprintf("%s/score_summary_%s.txt", work_dir, chrIdx))
     system(sprintf("touch %s/00FIN-chr-%s", work_dir, chrIdx), wait=TRUE)
     quit(save="no")

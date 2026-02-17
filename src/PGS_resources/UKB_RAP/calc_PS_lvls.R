@@ -541,6 +541,7 @@ if (checkpoint < 1) {
           if ("hm_inferOtherAllele" %in% names(score)) {
             score[!is.na(hm_inferOtherAllele), other_allele := hm_inferOtherAllele]
           }
+          mapname("other_allele", "OA")
         } else {
           mapname("rsID", "rsid")
           mapname("chr_name", "chr")
@@ -1058,8 +1059,9 @@ if (checkpoint < 2) {
     tryCatch({
       dcast(...)
     }, warning=function(w) {
-      score_info[!is.na(error), error := paste0("Critical error collating score weights on chromosome ", 
-                                                chrIdx, ": encountered multiple weights for the same effect allele.")]
+      score_info[, error := sprintf(
+        "%sCritical error collating score weights on chromosome %s: encountered multiple weights for the same effect allele.",
+        ifelse(is.na(error) | error == "", "", paste0(error, ".")), chrIdx)]
       fwrite(score_info, sep="\t", quote=FALSE, file=sprintf("errors/score_summary_%s.txt", chrIdx))
       fwrite(score_info, sep="\t", quote=FALSE, file=sprintf("finished/score_summary_%s.txt", chrIdx))
       dx_upload("errors", args[["--work"]])
