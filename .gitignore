@@ -9,6 +9,7 @@ TODO
 *.Rproj
 .DS_Store
 AoU_training/
+AoU_validation/
 bin/
 lib/
 pgsc_calc_logs/
