@@ -86,7 +86,7 @@ parse_code_value_pairs <- function(x) {
 # Function to load a dataset from the RAP
 load_from_rap <- function(rap_path) {
   if (args[["--container-mode"]]) {
-    fread(sprintf("/mnt/project/%s", rap_path), na.strings=c("", "NA"))
+    fread(file=sprintf("/mnt/project/%s", rap_path), na.strings=c("", "NA"))
   } else {
     if (!dir.exists(sprintf("%s/input_data/", work_dir))) {
       system(sprintf("mkdir -p %s/input_data", work_dir), ignore.stdout=!args[["--verbose"]])
@@ -95,7 +95,7 @@ load_from_rap <- function(rap_path) {
     if (!file.exists(sprintf("%s/input_data/%s", work_dir, fname))) {
       system(sprintf("dx download '%s' -o '%s/input_data/%s'", rap_path, work_dir, fname), ignore.stdout=!args[["--verbose"]])
     }
-    fread(sprintf("%s/input_data/%s", work_dir, fname), na.strings=c("", "NA"))
+    fread(file=sprintf("%s/input_data/%s", work_dir, fname), na.strings=c("", "NA"))
   }
 }
 
@@ -202,7 +202,7 @@ if (args[["--container-mode"]]) {
 } else {
   work_dir <- args[["--work-dir"]]
 }
-system(sprintf("mkdir -p %s", work_dir))
+system(sprintf("mkdir -p '%s'", work_dir))
 
 ########################################################################################
 # Load and check input def-file
