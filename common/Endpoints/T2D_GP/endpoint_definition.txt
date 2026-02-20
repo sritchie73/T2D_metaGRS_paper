@@ -4,3 +4,4 @@ filter to primary care sub-cohort
 exclude death register
 exclude hospital records
 exclude cancer register
+time since prevalent event
