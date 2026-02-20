@@ -466,8 +466,10 @@ vmessage(show(opts))
 ########################################################################################
 
 # Load ICD codes associated with cancer register
-cancer_icd10 <- load_from_rap("common/Cancer Register/icd10_codes.csv")
-cancer_icd9 <- load_from_rap("common/Cancer Register/icd9_codes.csv")
+if (!("exclude cancer register" %in% names(opts))) {
+  cancer_icd10 <- load_from_rap("common/Cancer Register/icd10_codes.csv")
+  cancer_icd9 <- load_from_rap("common/Cancer Register/icd9_codes.csv")
+}
 
 # Split into prevalent vs. incident for later use as well
 need_cancer_register_prevalent <- (
