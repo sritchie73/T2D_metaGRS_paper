@@ -75,4 +75,4 @@ pheno[t2d, on = .(eid, visit_index), c("t2d_case", "inci_t2d_followup") := .(i.t
 
 # Save and upload
 fwrite(pheno, sep="\t", quote=FALSE, file="ukb_t2d_pheno.tsv")
-dx_upload("ukb_t2d_pheno.tsv")
+dx_upload("ukb_t2d_pheno.tsv", "data/")
