@@ -1,0 +1,5 @@
+ICD-10: E11
+
+filter to primary care sub-cohort
+exclude death register
+exclude hospital records
