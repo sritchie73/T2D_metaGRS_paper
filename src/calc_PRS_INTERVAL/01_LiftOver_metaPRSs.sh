@@ -7,14 +7,14 @@ wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToHg19.over.ch
 # Needs pygscatalog, on OSX:
 # pip3 install --user --break-system-packages pgscatalog-core
 # export PATH=$HOME/Library/Python/3.14/bin:$PATH
-mkdir -p AoU_training/scorefiles_grch37/
-pgscatalog-format -s AoU_training/scorefile_formatted/*.txt.gz \
+mkdir -p output/AoU_training/scorefiles_grch37/
+pgscatalog-format -s output/AoU_training/scorefile_formatted/*.txt.gz \
   --chain_dir chain_files/ \
   --liftover --target_build GRCh37 \
-  --outfile AoU_training/scorefiles_grch37/ \
+  --outfile output/AoU_training/scorefiles_grch37/ \
   --threads 4 --verbose
 
 # Upload to CSD3
-scp AoU_training/scorefiles_grch37/* csd3:projects/T2D_metaGRS/data/PRS_score_files/
+scp output/AoU_training/scorefiles_grch37/* csd3:projects/T2D_metaGRS/data/PRS_score_files/
 
   
