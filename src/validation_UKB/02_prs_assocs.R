@@ -45,8 +45,22 @@ pheno <- pheno[pcs, on = .(eid), nomatch=0]
 # Create "OTH" ancestry for people who did not cluster into any genetic ancestry
 pheno[genetic_ancestry == "", genetic_ancestry := "OTH"]
 
+# Filter to unrelated individuals. When choosing from pairs of related samples, 
+# prioritise keeping T2D cases over non-cases.
+dx_download("common/Genetic Reference/kinship_relatness.txt", "input_data/")
+kinship <- fread("input_data/kinship_relatness.txt")
+kinship <- kinship[Kinship > 0.0884] # cutoff from KING manual for first-degree relatives http://people.virginia.edu/~wc9c/KING/manual.html
+kinship <- kinship[ID1 %in% pheno$eid & ID2 %in% pheno$eid]
+kinship[pheno, on = .(ID1=eid), ID1_t2d := i.t2d_case]
+kinship[pheno, on = .(ID2=eid), ID2_t2d := i.t2d_case]
+kinship[, to_drop := ifelse(ID1_t2d & !ID2_t2d, "ID1", "ID2")]
+kinship[to_drop == "ID1", to_drop_eid := ID1]
+kinship[to_drop == "ID2", to_drop_eid := ID2]
+pheno <- pheno[!kinship, on = .(eid=to_drop_eid)]
+
 # Loop through all ancestries to assess associations
 assocs <- foreach(this_ancestry = pheno[,unique(genetic_ancestry)], .combine=rbind) %do% {
+  cat(sprintf("Testing associations in %s samples...\n", this_ancestry))
   # Filter to this ancestry
   this_pheno <- pheno[genetic_ancestry == this_ancestry]
   
@@ -79,7 +93,8 @@ assocs <- foreach(this_ancestry = pheno[,unique(genetic_ancestry)], .combine=rbi
   
   mf <- "t2d_case ~ %s + age + sex + assessment_centre"
   foreach(this_pgs = pgs_list, .combine=rbind) %dopar% {
-    res <- glm.test(sprintf(mf, this_pgs), "t2d_case", this_pheno)
+    cat(sprintf("Testing PRS %s of %s...\n", which(pgs_list == this_pgs), length(pgs_list)))
+    res <- suppressMessages(glm.test(sprintf(mf, this_pgs), "t2d_case", this_pheno))
     cbind("genetic_ancestry"=this_ancestry, "PRS"=this_pgs, res)
   }
 }
