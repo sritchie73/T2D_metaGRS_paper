@@ -10,11 +10,11 @@ The purpose of this repository is to provide a public record of the source code 
 
 The following compute systems were used for this project:
 
- (1) The Cambridge Service for Data Driven Discovery (CSD3) high performance computing (HPC) cluster: https://docs.hpc.cam.ac.uk/hpc/index.html
- (2) The All of Us (AoU) Research Platform : https://www.researchallofus.org/data-tools/workbench/
- (3) The UK Biobank Research Analysis Platform (UKB RAP): https://dnanexus.gitbook.io/uk-biobank-rap
- (4) The National University of Singapore High Performance Computing Facility (NUS HPC): https://research.nus.edu.sg/research-facilities/project/central-high-performance-computing-facility/
- (5) Local compute
+1. The Cambridge Service for Data Driven Discovery (CSD3) high performance computing (HPC) cluster: https://docs.hpc.cam.ac.uk/hpc/index.html
+2. The All of Us (AoU) Research Platform : https://www.researchallofus.org/data-tools/workbench/
+3. The UK Biobank Research Analysis Platform (UKB RAP): https://dnanexus.gitbook.io/uk-biobank-rap
+4. The National University of Singapore High Performance Computing Facility (NUS HPC): https://research.nus.edu.sg/research-facilities/project/central-high-performance-computing-facility/
+5. Local compute
  
 CSD3 was used to prepare GWAS summary statistics for T2D multiancestry metaPRS training and for running analysis on the INTERVAL cohort. In the original preprint, CSD3 was also used to analyse the UK Biobank cohort (before use of the RAP was mandated) and to generate tables and figures.
  
@@ -30,21 +30,14 @@ Code in this repository lacks a coherent centralized organisation in part due to
 
 Broadly speaking, the logical ordering of the source code (in terms of analysis sequence) is as follows:
 
- (1) Code for downloading GWAS summary statistics used as inputs for the multiancestry metaPRS training can be found under `data/gwas_summary_statistics/`. Note some GWAS summary statistics required manual rather than automated download; see Table S14 in the manuscript for further details.
- 
- (2) Code for filtering and harmonizing the GWAS summary statistics for the multiancestry metaPRS training can be found under `src/prepare_sumstats/`
- 
- (3) Code for metaPRS training can be found in `src/metaPRS_training/` 
-
- (4) Code for computing metaPRS and other T2D PRS in UK Biobank can be found in `src/calc_PRS_UKB/`
- 
- (5) Code for curating common phenotypes (e.g. cross-project) in UK Biobank on the RAP can be found in `common/`
- 
- (6) Code for testing associations between PRS and T2D case status in UK Biobank can be found in `src/validation_UKB/`
- 
- (7) Code for computing metaPRS and other T2D PRS in INTERVAL can be found in `src/calc_PRS_INTERVAL/`
- 
- (8) Code for testing associations between PRS and T2D case status in UK Biobank can be found in `src/validation_INTERVAL/`
+1. Code for downloading GWAS summary statistics used as inputs for the multiancestry metaPRS training can be found under `data/gwas_summary_statistics/`. Note some GWAS summary statistics required manual rather than automated download; see Table S14 in the manuscript for further details.
+2. Code for filtering and harmonizing the GWAS summary statistics for the multiancestry metaPRS training can be found under `src/prepare_sumstats/`
+3. Code for metaPRS training can be found in `src/metaPRS_training/` 
+4. Code for computing metaPRS and other T2D PRS in UK Biobank can be found in `src/calc_PRS_UKB/`
+5. Code for curating common phenotypes (e.g. cross-project) in UK Biobank on the RAP can be found in `common/`
+6. Code for testing associations between PRS and T2D case status in UK Biobank can be found in `src/validation_UKB/`
+7. Code for computing metaPRS and other T2D PRS in INTERVAL can be found in `src/calc_PRS_INTERVAL/`
+8. Code for testing associations between PRS and T2D case status in UK Biobank can be found in `src/validation_INTERVAL/`
  
 
  
