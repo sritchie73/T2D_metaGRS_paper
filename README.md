@@ -34,7 +34,19 @@ Broadly speaking, the logical ordering of the source code (in terms of analysis 
  
  (2) Code for filtering and harmonizing the GWAS summary statistics for the multiancestry metaPRS training can be found under `src/prepare_sumstats/`
  
- (3) Code for metaPRS training can be found in `src/metaPRS_training/`
+ (3) Code for metaPRS training can be found in `src/metaPRS_training/` 
+
+ (4) Code for computing metaPRS and other T2D PRS in UK Biobank can be found in `src/calc_PRS_UKB/`
+ 
+ (5) Code for curating common phenotypes (e.g. cross-project) in UK Biobank on the RAP can be found in `common/`
+ 
+ (6) Code for testing associations between PRS and T2D case status in UK Biobank can be found in `src/validation_UKB/`
+ 
+ (7) Code for computing metaPRS and other T2D PRS in INTERVAL can be found in `src/calc_PRS_INTERVAL/`
+ 
+ (8) Code for testing associations between PRS and T2D case status in UK Biobank can be found in `src/validation_INTERVAL/`
+ 
+
  
  
 
@@ -42,6 +54,24 @@ Broadly speaking, the logical ordering of the source code (in terms of analysis 
 
 The following software and versions were used to run these scripts:
 
+### Local compute
+
+ - OSX (Tahoe 26.2)
+ - homebrew for managing software installation
+ - RStudio
+ - GNU bash version 5.3.9(1) (shell environment)
+ - golang (for compiling docopts)
+ - docopts
+ - python 3.14 along with libraries:
+   - dxpy
+   - pgscatalog-core
+ - Inkscape was used to layout and annotate figures from the figure components generated within the R scripts.
+ - Microsoft Office 365 was used to draft the manuscript (Microsoft Word) and curate supplemental tables (Microsoft Excel)
+ 
+### The All of Us research workbench
+
+
+ 
 ### UKB Research Analysis Platform
 
 - The run_script applet for running scripts as jobs (https://github.com/sritchie73/dxapplet-run_script)
@@ -88,4 +118,3 @@ The following software and versions were used to run these scripts:
     - patchwork version 1.2.0
     - hexbin version 1.28.3
 
-Inkscape version 1.2 was used to layout and annotate figures from the figure components generated within the R scripts. Microsoft Office 365 was used to draft the manuscript (Microsoft Word) and curate supplemental tables (Microsoft Excel) on MacOS Ventura 13.6.9
