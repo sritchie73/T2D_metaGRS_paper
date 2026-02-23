@@ -42,8 +42,8 @@ pcs <- pcs[,.(eid, PC1, PC2, PC3, PC4, PC5, PC6, PC7, PC8, PC9, PC10,
               PC11, PC12, PC13, PC14, PC15, PC16, PC17, PC18, PC19, PC20)]
 pheno <- pheno[pcs, on = .(eid), nomatch=0]
 
-# Drop individuals that did not cluster with any genetic ancestry
-pheno <- pheno[genetic_ancestry != ""]
+# Create "OTH" ancestry for people who did not cluster into any genetic ancestry
+pheno[genetic_ancestry == "", genetic_ancestry := "OTH"]
 
 # Loop through all ancestries to assess associations
 assocs <- foreach(this_ancestry = pheno[,unique(genetic_ancestry)], .combine=rbind) %do% {
@@ -55,6 +55,7 @@ assocs <- foreach(this_ancestry = pheno[,unique(genetic_ancestry)], .combine=rbi
   # largest group or lowest risk as reference 
   this_pheno[, age := scale(age)]
   this_pheno[, sex := factor(sex, reference="Female")]
+  this_pheno[, assessment_centre := factor_by_size(assessment_centre)]
   
   # For the HuertaChagoya2023, we need to combine their three scores as they describe at
   # https://www.pgscatalog.org/score/PGS003443/
@@ -76,7 +77,7 @@ assocs <- foreach(this_ancestry = pheno[,unique(genetic_ancestry)], .combine=rbi
     setnames(this_pheno, "this_pgs", this_pgs)
   }
   
-  mf <- "t2d_case ~ %s + age + sex"
+  mf <- "t2d_case ~ %s + age + sex + assessment_centre"
   foreach(this_pgs = pgs_list, .combine=rbind) %dopar% {
     res <- glm.test(sprintf(mf, this_pgs), "t2d_case", this_pheno)
     cbind("genetic_ancestry"=this_ancestry, "PRS"=this_pgs, res)
