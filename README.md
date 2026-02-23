@@ -1,6 +1,6 @@
 # Integrated clinical risk prediction of type 2 diabetes with a multifactorial polygenic risk score 
 
-This repository houses and documents the code used to generate the results in the study Ritchie SC et al. Integrated clinical risk prediction of type 2 diabetes with a multifactorial polygenic risk score. medRxiv, doi: XXXXXX. 
+This repository houses and documents the code used to generate the results in the study Ritchie SC *et al.* Integrated clinical risk prediction of type 2 diabetes with a multifactorial polygenic risk score. medRxiv, doi: [10.1101/2024.08.22.24312440](https://www.medrxiv.org/content/10.1101/2024.08.22.24312440v1)
 
 ## Repository information
 
